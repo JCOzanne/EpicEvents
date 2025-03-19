@@ -1,8 +1,10 @@
+from views.client_view import ClientView
+
 class MenuView:
     def __init__(self, user_view):
         self.user_view = user_view
-        # Ajoutez ici les autres vues dont vous aurez besoin
-        # self.client_view = client_view
+        self.client_view = ClientView(user_view.current_user)
+        self.client_view.current_user = user_view.current_user
         # self.contract_view = contract_view
         # self.event_view = event_view
 
@@ -20,8 +22,7 @@ class MenuView:
             if choice == "1":
                 self.display_user_menu()
             elif choice == "2":
-                # Appeler la méthode pour gérer les clients
-                pass
+                self.display_client_menu()
             elif choice == "3":
                 # Appeler la méthode pour gérer les contrats
                 pass
@@ -35,7 +36,6 @@ class MenuView:
                 print("Choix invalide. Veuillez réessayer.")
 
     def display_user_menu(self):
-        """Affichage du menu de gestion des utilisateurs"""
         while True:
             print("\n=== GESTION DES UTILISATEURS ===")
             print("1. Afficher tous les utilisateurs")
@@ -58,3 +58,31 @@ class MenuView:
                 break
             else:
                 print("Choix invalide. Veuillez réessayer.")
+
+    def display_client_menu(self):
+        while True:
+            print("\n=== GESTION DES CLIENTS ===")
+            print("1. Afficher tous les clients")
+            print("2. Afficher mes clients (commerciaux uniquement)")
+            print("3. Créer un client")
+            print("4. Mettre à jour un client")
+            print("5. Supprimer un client")
+            print("0. Retour au menu principal")
+
+            choice = input("Votre choix: ")
+
+            if choice == "1":
+                self.client_view.display_clients()
+            elif choice == "2":
+                self.client_view.display_clients_by_commercial()
+            elif choice == "3":
+                self.client_view.create_client_prompt()
+            elif choice == "4":
+                self.client_view.update_client_prompt()
+            elif choice == "5":
+                self.client_view.delete_client_prompt()
+            elif choice == "0":
+                break
+            else:
+                print("Choix invalide. Veuillez réessayer.")
+

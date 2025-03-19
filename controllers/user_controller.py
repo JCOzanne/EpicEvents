@@ -12,22 +12,22 @@ class UserController:
     def hash_password(self, password):
         """
         Secure password hashing with bcrypt
-        :param password:
+        :param password:the password og the user
         :return:hashed_password
         """
         password_bytes = password.encode('utf-8') if isinstance(password, str) else password
         hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
-        return hashed_password
+        return hashed_password.decode('utf-8')
 
     def verify_password(self, stored_password, provided_password):
         """
         Password verification with bcrypt
-        :param stored_password:
-        :param provided_password:
+        :param stored_password: hashed password stored in the database
+        :param provided_password: the password entered by the user
         :return:Boolean
         """
         provided_password_bytes = provided_password.encode('utf-8') if isinstance(provided_password, str) else provided_password
-        return bcrypt.checkpw(provided_password_bytes, stored_password)
+        return bcrypt.checkpw(provided_password_bytes, stored_password.encode('utf-8'))
 
     def create_user(self, name, email, password, role_id, current_user_id):
         if not self.check_permission(current_user_id, "gestion"):
@@ -42,9 +42,9 @@ class UserController:
     def authenticate(self, email, password):
         """
         User authentication
-        :param email:
-        :param password:
-        :return:user or None
+        :param email: the email of the user
+        :param password: the password of the user
+        :return: user or None
         """
         user = self.session.query(User).filter(User.email == email).first()
         if user and self.verify_password(user.password, password):
@@ -90,8 +90,8 @@ class UserController:
     def check_permission(self, user_id, role_name):
         """
         Checking a user's permissions
-        :param user_id:
-        :param role_name:
+        :param user_id: the id of the user
+        :param role_name: management/commercial/support
         :return: user's role
         """
         user = self.get_user_by_id(user_id)

@@ -18,7 +18,7 @@ class ClientView:
             print(f"Contact commercial chez epic Events : {commercial_name}")
 
     def create_client_prompt(self):
-        if not self.current_user or self.current_user.role != 'commercial':
+        if not self.current_user or self.current_user.role.name != 'commercial':
             print("Vous n'avez pas les droits pour créer un client")
             return
         print ("\n=== CRÉATION D'UN CLIENT ===")

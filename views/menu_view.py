@@ -1,11 +1,12 @@
 from views.client_view import ClientView
+from views.contract_view import ContractView
 
 class MenuView:
     def __init__(self, user_view):
         self.user_view = user_view
         self.client_view = ClientView(user_view.current_user)
         self.client_view.current_user = user_view.current_user
-        # self.contract_view = contract_view
+        self.contract_view = ContractView(user_view.current_user)
         # self.event_view = event_view
 
     def display_main_menu(self):
@@ -24,7 +25,7 @@ class MenuView:
             elif choice == "2":
                 self.display_client_menu()
             elif choice == "3":
-                # Appeler la méthode pour gérer les contrats
+                self.display_contract_menu()
                 pass
             elif choice == "4":
                 # Appeler la méthode pour gérer les événements
@@ -81,6 +82,33 @@ class MenuView:
                 self.client_view.update_client_prompt()
             elif choice == "5":
                 self.client_view.delete_client_prompt()
+            elif choice == "0":
+                break
+            else:
+                print("Choix invalide. Veuillez réessayer.")
+
+    def display_contract_menu(self):
+        while True:
+            print("\n=== GESTION DES CONTRATS ===")
+            print("1. Afficher tous les contrats")
+            print("2. Afficher les contrats non signés")
+            print("3. Afficher les contrats non entièrement payés")
+            print("4. Créer un contrat")
+            print("5. Mettre à jour un contrat")
+            print("0. Retour au menu principal")
+
+            choice = input("Votre choix: ")
+
+            if choice == "1":
+                self.contract_view.display_contracts()
+            elif choice == "2":
+                self.contract_view.display_unsigned_contracts()
+            elif choice == "3":
+                self.contract_view.display_unpaid_contracts()
+            elif choice == "4":
+                self.contract_view.create_contract_prompt()
+            elif choice == "5":
+                self.contract_view.update_contract_prompt()
             elif choice == "0":
                 break
             else:

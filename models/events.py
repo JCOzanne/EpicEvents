@@ -12,7 +12,7 @@ class Event(Base):
     notes = Column(String(255))
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
-    support_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    support_id = Column(Integer, ForeignKey('user.id'), nullable=True)
     support = relationship('User', back_populates='events')
     contract_id = Column(Integer, ForeignKey('contract.id'), nullable=False)
     contract = relationship('Contract', back_populates='events')

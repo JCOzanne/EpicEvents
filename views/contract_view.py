@@ -54,8 +54,20 @@ class ContractView:
             return
         print("\ ===CREATION D'UN CONTRAT ===")
         client_id = input("ID du client: ")
-        amount = float(input("Montant du contract: "))
-        sold = float(input("Montant déjà payé: "))
+
+        while True:
+            amount_str = input("Montant du contrat: ")
+            amount = validate_amount(amount_str)
+            if amount is not None:
+                break
+
+        while True:
+            sold_str = input("Montant déjà payé: ")
+            sold = validate_amount(sold_str)
+            if sold is not None and sold <= amount:
+                break
+            print("Le montant payé ne peut pas dépasser le montant du contrat.")
+
         status = input("Statut du contrat (1= signé, 0= non signé): ") =="1"
 
         contract = self.controller.create_contract(int(client_id), amount, sold, status, self.current_user)
@@ -79,8 +91,21 @@ class ContractView:
               f"Solde restant : {contract.sold}, "
               f"Statut : {'Signé' if contract.status else 'Non signé'}")
 
-        amount = input("Nouveau montant total (laisser vide pour ne pas changer): ")
-        sold = input("Nouveau solde restant (laisser vide pour ne pas changer): ")
+        amount = None
+        amount_input = input("Nouveau montant total (laisser vide pour ne pas changer): ")
+        if amount_input:
+            amount = validate_amount(amount_input)
+            if amount is None:
+                return
+
+        sold = None
+        sold_input = input("Nouveau solde restant (laisser vide pour ne pas changer): ")
+        if sold_input:
+            sold = validate_amount(sold_input)
+            if sold is None or (amount is not None and sold > amount):
+                print("⚠️ Le solde restant ne peut pas dépasser le montant total.")
+                return
+
         status = input("Statut du contrat (1 = signé, 0 = non signé, laisser vide pour ne pas changer): ")
 
         updated_contract = self.controller.update_contract(
@@ -95,4 +120,28 @@ class ContractView:
             print("Contrat mis à jour avec succès!")
         else:
             print("Erreur lors de la mise à jour du contrat.")
+
+    def delete_contract_prompt(self):
+        if self.current_user.role.name != 'gestion':
+            print("Vous n'avez pas les droits pour supprimer un contrat.")
+            return
+
+        contract_id = input("Saisissez l'ID du contrat à supprimer: ")
+
+        if self.controller.delete_contract(int(contract_id), self.current_user):
+            print("Contrat supprimé avec succès.")
+        else:
+            print("Échec de la suppression du contrat.")
+
+def validate_amount(input_str):
+    try:
+        input_str = input_str.replace(',', '.')
+        amount = float(input_str)
+        if amount < 0:
+            print("Le montant ne peut pas être négatif.")
+            return None
+        return amount
+    except ValueError:
+        print("Veuillez entrer un montant valide (nombre uniquement, sans symboles).")
+        return None
             

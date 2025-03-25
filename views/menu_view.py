@@ -1,5 +1,6 @@
 from views.client_view import ClientView
 from views.contract_view import ContractView
+from views.event_view import EventView
 
 class MenuView:
     def __init__(self, user_view):
@@ -7,7 +8,7 @@ class MenuView:
         self.client_view = ClientView(user_view.current_user)
         self.client_view.current_user = user_view.current_user
         self.contract_view = ContractView(user_view.current_user)
-        # self.event_view = event_view
+        self.event_view = EventView(user_view.current_user)
 
     def display_main_menu(self):
         while True:
@@ -28,7 +29,7 @@ class MenuView:
                 self.display_contract_menu()
                 pass
             elif choice == "4":
-                # Appeler la méthode pour gérer les événements
+                self.display_event_menu()
                 pass
             elif choice == "0":
                 print("Au revoir!")
@@ -95,6 +96,7 @@ class MenuView:
             print("3. Afficher les contrats non entièrement payés")
             print("4. Créer un contrat")
             print("5. Mettre à jour un contrat")
+            print("6. Supprimer un contrat")
             print("0. Retour au menu principal")
 
             choice = input("Votre choix: ")
@@ -109,6 +111,35 @@ class MenuView:
                 self.contract_view.create_contract_prompt()
             elif choice == "5":
                 self.contract_view.update_contract_prompt()
+            elif choice == "6":
+                self.contract_view.delete_contract_prompt()
+            elif choice == "0":
+                break
+            else:
+                print("Choix invalide. Veuillez réessayer.")
+
+    def display_event_menu(self):
+        while True:
+            print("\n=== GESTION DES ÉVÉNEMENTS ===")
+            print("1. Afficher tous les événements")
+            print("2. Afficher les événements attribués (support uniquement)")
+            print("3. Créer un événement (commercial uniquement)")
+            print("4. Mettre à jour un événement")
+            print("5. Supprimer un événement")
+            print("0. Retour au menu principal")
+
+            choice = input("Votre choix: ")
+
+            if choice == "1":
+                self.event_view.display_events()
+            elif choice == "2":
+                self.event_view.display_events_by_support()
+            elif choice == "3":
+                self.event_view.create_event_prompt()
+            elif choice == "4":
+                self.event_view.update_event_prompt()
+            elif choice == "5":
+                self.event_view.delete_event_prompt()
             elif choice == "0":
                 break
             else:

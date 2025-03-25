@@ -2,9 +2,6 @@ import bcrypt
 
 from models.roles import Role
 from models.users import User
-from models.clients import Client
-from models.contracts import Contract
-from models.events import Event
 from views.menu_view import MenuView
 from views.user_view import UserView
 from db.database import engine, Base, SessionLocal
@@ -33,7 +30,7 @@ def create_admin_user():
         gestion_role = session.query(Role).filter(Role.name == "gestion").first()
 
         password_bytes = "adminpassword".encode('utf-8')
-        hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
+        hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode('utf-8')
 
         admin = User(
             name="Admin",

@@ -1,3 +1,5 @@
+import re
+
 from controllers.client_controller import ClientController
 
 class ClientView:
@@ -24,7 +26,10 @@ class ClientView:
         print ("\n=== CRÉATION D'UN CLIENT ===")
         name = input("Nom du client: ")
         email = input("Email du client: ")
-        phone = input("Téléphone du client: ")
+        while True:
+            phone = input("Numéro de téléphone (format: 10 chiffres sans espaces ni - ou /) : ")
+            if validate_phone(phone):
+                break
         company = input("Entreprise du client: ")
         client = self.controller.create_client(name, email, phone, company, self.current_user)
         if client:
@@ -46,7 +51,11 @@ class ClientView:
             return
         name = input("Nouveau nom du client (laisser vide pour ne pas changer): ")
         email = input("Nouvel email du client (laisser vide pour ne pas changer) : ")
-        phone = input("Nouveau téléphone du client (laisser vide pour ne pas changer): ")
+
+        phone = None
+        phone_input = input("Nouveau numéro de téléphone (format: 10 chiffres sans espaces ni - ou /): ")
+        if phone_input and validate_phone(phone_input):
+            phone = phone_input
         company = input("Nouvelle entreprise du client (laisser vide pour ne pas changer): ")
 
         updated_client = self.controller.update_client(client.id, name, email, phone, company, self.current_user)
@@ -81,3 +90,10 @@ class ClientView:
 
         for client in clients:
             print(f"ID: {client.id}, Nom: {client.name}, Email: {client.email}, Entreprise: {client.company}")
+
+def validate_phone(phone):
+    pattern = r'^0[1-9]\d{8}$'
+    if re.fullmatch(pattern, phone):
+        return True
+    print("Le numéro de téléphone doit être composé de 10 chiffres (sans espaces, - ou /) et commencer par 0.")
+    return False

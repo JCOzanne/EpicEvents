@@ -45,9 +45,6 @@ class UserView:
             print("Erreur lors de la création de l'utilisateur.")
 
     def display_users(self):
-        if not self.current_user or not self.controller.check_permission(self.current_user.id, "gestion"):
-            print("Vous n'avez pas les droits pour voir la liste des utilisateurs.")
-            return
 
         users = self.controller.get_all_users()
         print("=== LISTE DES UTILISATEURS ===")
@@ -61,6 +58,11 @@ class UserView:
 
         print("=== MISE A JOUR D'UTILISATEUR ===")
         user_id = input("ID de l'utilisateur à mettre à jour: ")
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            print("ID invalide. Veuillez entrer un nombre entier.")
+            return
         name = input("Nouveau nom (laissez vide pour ne pas changer): ")
         email = input("Nouvel email (laissez vide pour ne pas changer): ")
 
@@ -72,7 +74,13 @@ class UserView:
 
         role_id = int(role_choice) if role_choice else None
 
-        user = self.controller.update_user(int(user_id), name if name else None, email if email else None, role_id, self.current_user.id)
+        user = self.controller.update_user(
+            int(user_id),
+            self.current_user.id,
+            name if name else None,
+            email if email else None,
+            role_id if role_id else None
+        )
         if user:
             print(f"Utilisateur {user.name} mis à jour avec succès!")
         else:

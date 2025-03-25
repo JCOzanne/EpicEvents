@@ -43,16 +43,19 @@ class ContractController:
         self.session.commit()
         return contract
 
-    def delete_contract(self, contract_id):
+    def delete_contract(self, contract_id, current_user ):
         if current_user.role_name != "gestion":
+            print("Seuls les gestionnaires peuvent supprimer un contrat.")
             return False
 
         contract = self.get_contract_by_id(contract_id)
         if not contract :
+            print("contrat introuvable.")
             return False
 
         self.session.delete(contract)
         self.session.commit()
+        print(f"Le contrat ID {contract.id} a été supprimé avec succès.")
         return True
 
     def get_all_contracts(self):

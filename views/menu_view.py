@@ -1,41 +1,91 @@
+import os
+
 from views.client_view import ClientView
 from views.contract_view import ContractView
 from views.event_view import EventView
+from auth import TOKEN_FILE
 
 class MenuView:
     def __init__(self, user_view):
         self.user_view = user_view
+        self.token_file = TOKEN_FILE
         self.client_view = ClientView(user_view.current_user)
-        self.client_view.current_user = user_view.current_user
         self.contract_view = ContractView(user_view.current_user)
         self.event_view = EventView(user_view.current_user)
+        self.current_user = self.load_user_from_token()
+
+    def load_user_from_token(self):
+        if os.path.exists(self.token_file):
+            with open(self.token_file, "r") as file:
+                token = file.read().strip()
+                user = self.user_view.controller.verify_token(token)
+                if user:
+                    print(f"Connexion rétablie pour {user.name} ({user.role.name})")
+                    return user
+        return None
+
+    def save_token(self, token):
+        with open(self.token_file, "w") as file:
+            file.write(token)
+
+    def delete_token(self):
+        if os.path.exists(self.token_file):
+            os.remove(self.token_file)
+            print("Déconnexion réussie.")
+        else:
+            print("Aucun token trouvé. Vous n'êtes pas connecté.")
 
     def display_main_menu(self):
         while True:
             print("\n=== EPIC EVENTS CRM ===")
-            print("1. Gestion des utilisateurs")
-            print("2. Gestion des clients")
-            print("3. Gestion des contrats")
-            print("4. Gestion des événements")
-            print("0. Quitter")
+            if self.current_user:
+                print("1. Gestion des utilisateurs")
+                print("2. Gestion des clients")
+                print("3. Gestion des contrats")
+                print("4. Gestion des événements")
+                print("5. Se déconnecter")
+            else:
+                print("1. Se connecter")
+                print("0. Quitter")
 
             choice = input("Votre choix: ")
 
-            if choice == "1":
-                self.display_user_menu()
-            elif choice == "2":
-                self.display_client_menu()
-            elif choice == "3":
-                self.display_contract_menu()
-                pass
-            elif choice == "4":
-                self.display_event_menu()
-                pass
-            elif choice == "0":
-                print("Au revoir!")
-                break
+            if not self.current_user:
+                if choice == "1":
+                    self.login_prompt()
+                elif choice == "0":
+                    print("Au revoir !")
+                    break
+                else:
+                    print("Choix invalide. Veuillez réessayer.")
             else:
-                print("Choix invalide. Veuillez réessayer.")
+                if choice == "1":
+                    self.display_user_menu()
+                elif choice == "2":
+                    self.display_client_menu()
+                elif choice == "3":
+                    self.display_contract_menu()
+                elif choice == "4":
+                    self.display_event_menu()
+                elif choice == "5":
+                    self.delete_token()
+                    self.current_user = None
+                else:
+                    print("Choix invalide. Veuillez réessayer.")
+
+    def login_prompt(self):
+        print("=== CONNEXION ===")
+        email = input("Email: ")
+        password = input("Mot de passe: ")
+
+        user = self.user_view.controller.authenticate(email, password)
+        if user:
+            print(f"Bienvenue, {user.name}!")
+            token = self.user_view.controller.generate_token(user)
+            self.save_token(token)
+            self.current_user = user
+        else:
+            print("⚠️ Email ou mot de passe incorrect.")
 
     def display_user_menu(self):
         while True:
@@ -144,4 +194,3 @@ class MenuView:
                 break
             else:
                 print("Choix invalide. Veuillez réessayer.")
-

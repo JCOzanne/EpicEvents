@@ -1,5 +1,5 @@
 from controllers.user_controller import UserController
-
+from auth import generate_token, verify_token, delete_token
 
 class UserView:
     def __init__(self):
@@ -14,11 +14,24 @@ class UserView:
         user = self.controller.authenticate(email, password)
         if user:
             self.current_user = user
+            generate_token(user)
             print(f"Bienvenue, {user.name}!")
             return True
         else:
             print("Email ou mot de passe incorrect.")
             return False
+
+    def logout_prompt(self):
+        delete_token()
+        self.current_user = None
+        print("Déconnexion réussie.")
+
+    def check_authentication(self):
+        payload = verify_token()
+        if payload:
+            self.current_user = self.controller.get_user_by_id(payload['user_id'])
+            return True
+        return False
 
     def create_user_prompt(self):
         if not self.current_user or not self.controller.check_permission(self.current_user.id, "gestion"):

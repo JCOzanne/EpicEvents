@@ -2,12 +2,22 @@ import re
 import pendulum
 
 from controllers.event_controller import EventController
+from controllers.user_controller import UserController
 
 
 class EventView:
     def __init__(self, current_user):
         self.controller = EventController()
         self.current_user = current_user
+        self.user_controller = UserController()
+
+    def check_authentication(self):
+        from auth import verify_token
+        payload = verify_token()
+        if payload:
+            self.current_user = self.controller.get_user_by_id(payload['user_id'])
+            return True
+        return False
 
     def display_events(self):
         events = self.controller.get_all_events()

@@ -1,11 +1,20 @@
-import pendulum
-
 from controllers.contract_controller import ContractController
+from controllers.user_controller import UserController
+
 
 class ContractView:
     def __init__(self, current_user):
         self.controller = ContractController()
         self.current_user = current_user
+        self.user_controller = UserController()
+
+    def check_authentication(self):
+        from auth import verify_token
+        payload = verify_token()
+        if payload:
+            self.current_user = self.controller.get_user_by_id(payload['user_id'])
+            return True
+        return False
 
     def display_contracts(self):
         contracts = self.controller.get_all_contracts()

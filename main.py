@@ -1,4 +1,5 @@
 import bcrypt
+import sys
 
 from models.roles import Role
 from models.users import User
@@ -21,7 +22,6 @@ def initialize_roles():
         print("Rôles initialisés avec succès.")
 
     session.close()
-
 
 def create_admin_user():
     session = SessionLocal()
@@ -47,20 +47,21 @@ def create_admin_user():
     session.close()
 
 def main():
-    Base.metadata.create_all(engine)
-    initialize_roles()
-    create_admin_user()
-
-    print("Application démarrée.")
-
-
     user_view = UserView()
 
-    if user_view.login_prompt():
-        menu_view = MenuView(user_view)
-        menu_view.display_main_menu()
+    if len(sys.argv) > 1 and sys.argv[1] == "login":
+        if user_view.login_prompt():
+            menu_view = MenuView(user_view)
+            menu_view.display_main_menu()
+        else:
+            print("Connexion échouée. Veuillez réessayer.")
     else:
-        print("Connexion échouée. Veuillez réessayer.")
+        if user_view.check_authentication():
+            menu_view = MenuView(user_view)
+            menu_view.display_main_menu()
+        else:
+            print("Veuillez vous connecter en utilisant la commande : python main.py login")
+
 
 if __name__ == "__main__":
     main()

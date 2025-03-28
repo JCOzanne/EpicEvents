@@ -1,11 +1,22 @@
 import re
 
 from controllers.client_controller import ClientController
+from controllers.user_controller import UserController
+
 
 class ClientView:
     def __init__(self, client):
         self.controller = ClientController()
         self.current_user = None
+        self.user_controller = UserController()
+
+    def check_authentication(self):
+        from auth import verify_token
+        payload = verify_token()
+        if payload:
+            self.current_user = self.controller.get_user_by_id(payload['user_id'])
+            return True
+        return False
 
     def display_clients(self):
         clients = self.controller.get_all_clients()

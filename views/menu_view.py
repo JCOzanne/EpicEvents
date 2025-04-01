@@ -136,14 +136,20 @@ class MenuView:
     def display_client_menu(self):
         while True:
             print("\n=== GESTION DES CLIENTS ===")
-            print("1. Afficher tous les clients")
-            print("2. Afficher mes clients (commerciaux uniquement)")
-            print("3. Créer un client")
-            print("4. Mettre à jour un client")
-            print("5. Supprimer un client")
-            print("0. Retour au menu principal")
 
-            choice = input("Votre choix: ")
+            choices = [
+                Choice(value="1", name="Afficher tous lesclients"),
+                Choice(value="2", name="Afficher mes clients (commerciaux uniquement)"),
+                Choice(value="3", name="Créer un client"),
+                Choice(value="4", name="Mettre à jour un client"),
+                Choice(value="5", name="Supprimer un client"),
+                Choice(value="0", name="Retour au menu principal"),
+            ]
+
+            choice = inquirer.select(
+                message="Choisissez une option:",
+                choices=choices,
+            ).execute()
 
             if choice == "1":
                 self.client_view.display_clients()

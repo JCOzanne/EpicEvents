@@ -1,9 +1,14 @@
 import os
+import re
+from InquirerPy import inquirer
+from InquirerPy.base.control import Choice
+from InquirerPy.validator import EmptyInputValidator
 
 from views.client_view import ClientView
 from views.contract_view import ContractView
 from views.event_view import EventView
 from auth import TOKEN_FILE
+
 
 class MenuView:
     def __init__(self, user_view):
@@ -13,6 +18,12 @@ class MenuView:
         self.contract_view = ContractView(user_view.current_user)
         self.event_view = EventView(user_view.current_user)
         self.current_user = self.load_user_from_token()
+
+    def validate_email(self, email):
+        pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+        if not re.match(pattern, email):
+            return "Veuillez entrer un email valide"
+        return True
 
     def load_user_from_token(self):
         if os.path.exists(self.token_file):
@@ -39,16 +50,23 @@ class MenuView:
         while True:
             print("\n=== EPIC EVENTS CRM ===")
             if self.current_user:
-                print("1. Gestion des utilisateurs")
-                print("2. Gestion des clients")
-                print("3. Gestion des contrats")
-                print("4. Gestion des événements")
-                print("5. Se déconnecter")
+                choices = [
+                    Choice(value="1", name="Gestion des utilisateurs"),
+                    Choice(value="2", name="Gestion des clients"),
+                    Choice(value="3", name="Gestion des contrats"),
+                    Choice(value="4", name="Gestion des événements"),
+                    Choice(value="5", name="Se déconnecter"),
+                ]
             else:
-                print("1. Se connecter")
-                print("0. Quitter")
+                choices = [
+                    Choice(value="1", name="Se connecter"),
+                    Choice(value="0", name="Quitter"),
+                ]
 
-            choice = input("Votre choix: ")
+            choice = inquirer.select(
+                message="Choisissez une option:",
+                choices=choices,
+            ).execute()
 
             if not self.current_user:
                 if choice == "1":
@@ -56,8 +74,6 @@ class MenuView:
                 elif choice == "0":
                     print("Au revoir !")
                     break
-                else:
-                    print("Choix invalide. Veuillez réessayer.")
             else:
                 if choice == "1":
                     self.display_user_menu()
@@ -70,33 +86,41 @@ class MenuView:
                 elif choice == "5":
                     self.delete_token()
                     self.current_user = None
-                else:
-                    print("Choix invalide. Veuillez réessayer.")
 
     def login_prompt(self):
         print("=== CONNEXION ===")
-        email = input("Email: ")
-        password = input("Mot de passe: ")
 
+        email = inquirer.text(message="Email: ",
+                              validate=self.validate_email,
+                              ).execute()
+        password = inquirer.secret(message="Mot de passe: ",
+                                   validate=EmptyInputValidator(message="Le mot de passe ne peut être vide"),
+                                   ).execute()
         user = self.user_view.controller.authenticate(email, password)
         if user:
-            print(f"Bienvenue, {user.name}!")
+            print(f"Bienvenue {user.name} !")
             token = self.user_view.controller.generate_token(user)
             self.save_token(token)
             self.current_user = user
         else:
-            print("⚠️ Email ou mot de passe incorrect.")
+            print("Email ou mot de passe incorrect.")
 
     def display_user_menu(self):
         while True:
             print("\n=== GESTION DES UTILISATEURS ===")
-            print("1. Afficher tous les utilisateurs")
-            print("2. Créer un utilisateur")
-            print("3. Mettre à jour un utilisateur")
-            print("4. Supprimer un utilisateur")
-            print("0. Retour au menu principal")
 
-            choice = input("Votre choix: ")
+            choices = [
+                Choice(value="1", name="Afficher tous les utilisateurs"),
+                Choice(value="2", name="Créer un utilisateur"),
+                Choice(value="3", name="Mettre à jour un utilisateur"),
+                Choice(value="4", name="Supprimer un utilisateur"),
+                Choice(value="0", name="Retour au menu principal"),
+            ]
+
+            choice = inquirer.select(
+                message="Choisissez une option:",
+                choices=choices,
+            ).execute()
 
             if choice == "1":
                 self.user_view.display_users()
@@ -108,8 +132,6 @@ class MenuView:
                 self.user_view.delete_user_prompt()
             elif choice == "0":
                 break
-            else:
-                print("Choix invalide. Veuillez réessayer.")
 
     def display_client_menu(self):
         while True:

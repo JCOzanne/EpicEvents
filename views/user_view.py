@@ -1,3 +1,8 @@
+from InquirerPy import inquirer
+from InquirerPy.base.control import Choice
+from InquirerPy.validator import EmptyInputValidator
+import re
+
 from controllers.user_controller import UserController
 from auth import generate_token, verify_token, delete_token
 
@@ -6,16 +11,28 @@ class UserView:
         self.controller = UserController()
         self.current_user = None
 
+    def validate_email(self, email):
+        pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+        if not re.match(pattern, email):
+            return "Veuillez entrer un email valide"
+        return True
+
     def login_prompt(self):
         print("=== CONNEXION ===")
-        email = input("Email: ")
-        password = input("Mot de passe: ")
 
-        user = self.controller.authenticate(email, password)
+        email = inquirer.text("Email: ",
+                              validate=self.validate_email,
+                              ).execute()
+        password = inquirer.secret(
+            message="Mot de passe: ",
+            validate=EmptyInputValidator(message="Le mot de passe ne peut être vide"),
+        ).execute()
+
+        user=self.controller.authenticate(email, password)
         if user:
             self.current_user = user
             generate_token(user)
-            print(f"Bienvenue, {user.name}!")
+            print(f"Bienvenue {user.name} !")
             return True
         else:
             print("Email ou mot de passe incorrect.")
@@ -39,27 +56,35 @@ class UserView:
             return
 
         print("=== CREATION D'UTILISATEUR ===")
-        name = input("Nom: ")
-        email = input("Email: ")
-        password = input("Mot de passe: ")
 
-        print("Rôles disponibles:")
-        print("1. Commercial")
-        print("2. Support")
-        print("3. Gestion")
-        role_choice = input("Choix du rôle (1-3): ")
+        name=inquirer.text(message="Nom de l'utilisateur",
+                           validate=EmptyInputValidator(message="Le nom ne peut pas être vide"),
+                           ).execute()
+        email=inquirer.text(message="Email: ",
+                            validate=self.validate_email,
+                            ).execute()
+        password=inquirer.secret(
+            message="Mot de passe: ",
+            validate=EmptyInputValidator(message="Le mail ne peut être vide"),
+        ).execute()
+        role_choice=inquirer.select(
+            message="Rôle",
+            choices=[
+                Choice(value=1, name="Commercial"),
+                Choice(value=2, name="Support"),
+                Choice(value=3, name="Gestion"),
+            ],
+        ).execute()
 
-        role_id = int(role_choice)
-
-        user = self.controller.create_user(name, email, password, role_id, self.current_user.id)
+        user=self.controller.create_user(name, email, password, role_choice, self.current_user.id)
         if user:
-            print(f"Utilisateur {user.name} créé avec succès!")
+            print(f"L'utilisateur {user.name} crée avec succés")
         else:
-            print("Erreur lors de la création de l'utilisateur.")
+            print("Erreur lors de la création de l'utilisateur")
 
     def display_users(self):
-
         users = self.controller.get_all_users()
+
         print("=== LISTE DES UTILISATEURS ===")
         for user in users:
             print(f"ID: {user.id}, Nom: {user.name}, Email: {user.email}, Rôle: {user.role.name}")
@@ -70,34 +95,56 @@ class UserView:
             return
 
         print("=== MISE A JOUR D'UTILISATEUR ===")
-        user_id = input("ID de l'utilisateur à mettre à jour: ")
-        try:
-            user_id = int(user_id)
-        except ValueError:
-            print("ID invalide. Veuillez entrer un nombre entier.")
-            return
-        name = input("Nouveau nom (laissez vide pour ne pas changer): ")
-        email = input("Nouvel email (laissez vide pour ne pas changer): ")
 
-        print("Rôles disponibles:")
-        print("1. Commercial")
-        print("2. Support")
-        print("3. Gestion")
-        role_choice = input("Nouveau rôle (1-3, laissez vide pour ne pas changer): ")
+        users = self.controller.get_all_users()
+        user_choices = [Choice(value=user.id, name=f"ID: {user.id}, Nom: {user.name}, Email: {user.email}") for user in
+                        users]
 
-        role_id = int(role_choice) if role_choice else None
+        user_id = inquirer.select(
+            message="Sélectionnez l'utilisateur à mettre à jour:",
+            choices=user_choices,
+        ).execute()
+
+        name = inquirer.text(
+            message="Nouveau nom (laissez vide pour ne pas changer):",
+        ).execute()
+
+        def validate_optional_email(result):
+            if not result:
+                return True
+            return self.validate_email(result)
+
+        email = inquirer.text(
+            message="Nouvel email (laissez vide pour ne pas changer):",
+            validate=validate_optional_email,
+        ).execute()
+
+        role_choices = [
+            Choice(value=None, name="Ne pas changer"),
+            Choice(value=1, name="Commercial"),
+            Choice(value=2, name="Support"),
+            Choice(value=3, name="Gestion"),
+        ]
+
+        role_id = inquirer.select(
+            message="Nouveau rôle:",
+            choices=role_choices,
+        ).execute()
 
         user = self.controller.update_user(
-            int(user_id),
+            user_id,
             self.current_user.id,
             name if name else None,
             email if email else None,
-            role_id if role_id else None
+            role_id
         )
+
         if user:
             print(f"Utilisateur {user.name} mis à jour avec succès!")
         else:
             print("Erreur lors de la mise à jour de l'utilisateur.")
+
+
 
     def delete_user_prompt(self):
         if not self.current_user or not self.controller.check_permission(self.current_user.id, "gestion"):
@@ -105,9 +152,26 @@ class UserView:
             return
 
         print("=== SUPPRESSION D'UTILISATEUR ===")
-        user_id = input("ID de l'utilisateur à supprimer: ")
 
-        if self.controller.delete_user(int(user_id), self.current_user.id):
+        users = self.controller.get_all_users()
+        user_choices = [Choice(value=user.id, name=f"ID: {user.id}, Nom: {user.name}, Email: {user.email}") for user in
+                        users]
+
+        user_id = inquirer.select(
+            message="Sélectionnez l'utilisateur à supprimer:",
+            choices=user_choices,
+        ).execute()
+
+        confirm = inquirer.confirm(
+            message=f"Êtes-vous sûr de vouloir supprimer l'utilisateur {user_id} ?",
+            default=False
+        ).execute()
+
+        if not confirm:
+            print("Suppression annulée.")
+            return
+
+        if self.controller.delete_user(user_id, self.current_user.id):
             print("Utilisateur supprimé avec succès!")
         else:
             print("Erreur lors de la suppression de l'utilisateur.")

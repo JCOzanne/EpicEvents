@@ -169,15 +169,21 @@ class MenuView:
     def display_contract_menu(self):
         while True:
             print("\n=== GESTION DES CONTRATS ===")
-            print("1. Afficher tous les contrats")
-            print("2. Afficher les contrats non signés")
-            print("3. Afficher les contrats non entièrement payés")
-            print("4. Créer un contrat")
-            print("5. Mettre à jour un contrat")
-            print("6. Supprimer un contrat")
-            print("0. Retour au menu principal")
 
-            choice = input("Votre choix: ")
+            choices = [
+                Choice(value="1", name="Afficher tous les contrats"),
+                Choice(value="2", name="Afficher les contrats non signés"),
+                Choice(value="3", name="Afficher les contrats non entièrement payés"),
+                Choice(value="4", name="Créer un contrat"),
+                Choice(value="5", name="Mettre à jour un contrat"),
+                Choice(value="6", name="Supprimer un contrat"),
+                Choice(value="0", name="Retour au menu principal"),
+            ]
+
+            choice = inquirer.select(
+                message="Choisissez une option:",
+                choices=choices,
+            ).execute()
 
             if choice == "1":
                 self.contract_view.display_contracts()
@@ -199,14 +205,20 @@ class MenuView:
     def display_event_menu(self):
         while True:
             print("\n=== GESTION DES ÉVÉNEMENTS ===")
-            print("1. Afficher tous les événements")
-            print("2. Afficher les événements attribués (support uniquement)")
-            print("3. Créer un événement (commercial uniquement)")
-            print("4. Mettre à jour un événement")
-            print("5. Supprimer un événement")
-            print("0. Retour au menu principal")
 
-            choice = input("Votre choix: ")
+            choices = [
+                Choice(value="1", name="Afficher tous les événements"),
+                Choice(value="2", name="Afficher les événements attribués (support uniquement)"),
+                Choice(value="3", name="Créer un événement (commercial uniquement)"),
+                Choice(value="4", name="Mettre à jour un événement"),
+                Choice(value="5", name="Supprimer un événement"),
+                Choice(value="0", name="Retour au menu principal"),
+            ]
+
+            choice = inquirer.select(
+                message="Choisissez une option:",
+                choices=choices,
+            ).execute()
 
             if choice == "1":
                 self.event_view.display_events()

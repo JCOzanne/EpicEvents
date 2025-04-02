@@ -44,6 +44,10 @@ class UserView:
         print("Déconnexion réussie.")
 
     def check_authentication(self):
+        """
+        Check if a user is authenticated.
+        Verifies the user's token and retrieves user details if valid.
+        """
         payload = verify_token()
         if payload:
             self.current_user = self.controller.get_user_by_id(payload['user_id'])
@@ -110,6 +114,12 @@ class UserView:
         ).execute()
 
         def validate_optional_email(result):
+            """
+            Validate an optional email address.
+        This method checks if the provided email is valid if it's not empty.
+        It returns True if the email is empty or valid,
+        otherwise it returns the validation error message.
+            """
             if not result:
                 return True
             return self.validate_email(result)

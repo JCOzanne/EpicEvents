@@ -1,3 +1,7 @@
+from InquirerPy import inquirer
+from InquirerPy.base.control import Choice
+
+from controllers.client_controller import ClientController
 from controllers.contract_controller import ContractController
 from controllers.user_controller import UserController
 
@@ -7,6 +11,7 @@ class ContractView:
         self.controller = ContractController()
         self.current_user = current_user
         self.user_controller = UserController()
+        self.client_controller = ClientController()
 
     def check_authentication(self):
         from auth import verify_token
@@ -61,67 +66,159 @@ class ContractView:
         if self.current_user.role.name != "gestion":
             print("Vous n'avez pas le droit de créer de contrat")
             return
-        print("\ ===CREATION D'UN CONTRAT ===")
-        client_id = input("ID du client: ")
 
-        while True:
-            amount_str = input("Montant du contrat: ")
-            amount = validate_amount(amount_str)
-            if amount is not None:
-                break
+        print("\n=== CREATION D'UN CONTRAT ===")
 
-        while True:
-            sold_str = input("Montant déjà payé: ")
-            sold = validate_amount(sold_str)
-            if sold is not None and sold <= amount:
-                break
-            print("Le montant payé ne peut pas dépasser le montant du contrat.")
+        clients = self.client_controller.get_all_clients()
+        if not clients:
+            print("Aucun client disponible. Veuillez d'abord créer un client.")
+            return
 
-        status = input("Statut du contrat (1= signé, 0= non signé): ") =="1"
+        client_choices = [Choice(value=client.id, name=f"{client.name} ({client.company})") for client in clients]
 
-        contract = self.controller.create_contract(int(client_id), amount, sold, status, self.current_user)
+        client_id = inquirer.select(
+            message="Sélectionnez un client:",
+            choices=client_choices,
+        ).execute()
+
+        def validate_amount(amount):
+            """
+            Validate the contract amount.
+
+        This method checks if the given amount is a positive number.
+        It returns True if the amount is valid (a number),
+        otherwise it returns the validation error message.
+            """
+            try:
+                amount = float(amount.replace(',', '.'))
+                if amount <= 0:
+                    return "Le montant doit être supérieur à zéro."
+                return True
+            except ValueError:
+                return "Veuillez entrer un montant valide (nombre uniquement)."
+
+        amount = inquirer.text(
+            message="Montant total du contrat:",
+            validate=validate_amount,
+        ).execute()
+        amount = float(amount.replace(',', '.'))
+
+        def validate_sold(sold):
+            try:
+                sold = float(sold.replace(',', '.'))
+                if sold < 0:
+                    return "Le montant payé ne peut pas être négatif."
+                if sold > amount:
+                    return "Le montant payé ne peut pas dépasser le montant total du contrat."
+                return True
+            except ValueError:
+                return "Veuillez entrer un montant valide (nombre uniquement)."
+
+        sold = inquirer.text(
+            message="Montant déjà payé:",
+            validate=validate_sold,
+        ).execute()
+        sold = float(sold.replace(',', '.'))
+
+        status = inquirer.confirm(
+            message="Le contrat est-il signé?",
+            default=False,
+        ).execute()
+
+        contract = self.controller.create_contract(client_id, amount, sold, status, self.current_user)
         if contract:
-            print(f"Contrat créé avec succès ")
+            print(f"Contrat créé avec succès pour le client ID {client_id}")
         else:
             print("Erreur lors de la création du contrat.")
-
     def update_contract_prompt(self):
-        print("\=== MISE A JOUR D'UN CONTRAT ===")
-        contract_id = input("ID du contrat à mettre à jour: ")
-        contract = self.controller.get_contract_by_id(int(contract_id))
-        if not contract :
-            print("Pas de contrat avec cet ID")
+        print("\n=== MISE A JOUR D'UN CONTRAT ===")
+
+        contracts = self.controller.get_all_contracts()
+        if not contracts:
+            print("Aucun contrat disponible à mettre à jour.")
             return
-        if self.current_user.role.name == 'commercial'and contract.client.commercial.id != self.current_user.id:
-            print("Vous n'avez pas les droits pour mettre à jour ce contrat")
-            return
+
+        if self.current_user.role.name == 'commercial':
+            contracts = [c for c in contracts if c.client and c.client.commercial_id == self.current_user.id]
+            if not contracts:
+                print("Vous n'avez aucun contrat associé à vos clients.")
+                return
+
+        contract_choices = [
+            Choice(
+                value=contract.id,
+                name=f"ID: {contract.id}, Client: {contract.client.name if contract.client else 'Inconnu'}, Montant: {contract.amount}, Solde: {contract.sold}"
+            )
+            for contract in contracts
+        ]
+
+        contract_id = inquirer.select(
+            message="Sélectionnez un contrat à mettre à jour:",
+            choices=contract_choices,
+        ).execute()
+
+        contract = self.controller.get_contract_by_id(contract_id)
         print(f"Date de création : {contract.date_created}, "
               f"Montant total : {contract.amount}, "
               f"Solde restant : {contract.sold}, "
               f"Statut : {'Signé' if contract.status else 'Non signé'}")
 
-        amount = None
-        amount_input = input("Nouveau montant total (laisser vide pour ne pas changer): ")
-        if amount_input:
-            amount = validate_amount(amount_input)
-            if amount is None:
-                return
+        def validate_optional_amount(amount):
+            if not amount:
+                return True
+            try:
+                amount = float(amount.replace(',', '.'))
+                if amount <= 0:
+                    return "Le montant doit être supérieur à zéro."
+                return True
+            except ValueError:
+                return "Veuillez entrer un montant valide (nombre uniquement)."
 
-        sold = None
-        sold_input = input("Nouveau solde restant (laisser vide pour ne pas changer): ")
-        if sold_input:
-            sold = validate_amount(sold_input)
-            if sold is None or (amount is not None and sold > amount):
-                print("⚠️ Le solde restant ne peut pas dépasser le montant total.")
-                return
+        amount_input = inquirer.text(
+            message="Nouveau montant total (laisser vide pour ne pas changer):",
+            validate=validate_optional_amount,
+        ).execute()
 
-        status = input("Statut du contrat (1 = signé, 0 = non signé, laisser vide pour ne pas changer): ")
+        amount = float(amount_input.replace(',', '.')) if amount_input else None
+
+        def validate_optional_sold(sold):
+            if not sold:
+                return True
+            try:
+                sold = float(sold.replace(',', '.'))
+                if sold < 0:
+                    return "Le montant payé ne peut pas être négatif."
+                if amount is not None and sold > amount:
+                    return "Le solde restant ne peut pas dépasser le montant total."
+                if amount is None and sold > contract.amount:
+                    return "Le solde restant ne peut pas dépasser le montant total actuel."
+                return True
+            except ValueError:
+                return "Veuillez entrer un montant valide (nombre uniquement)."
+
+        sold_input = inquirer.text(
+            message="Nouveau solde restant (laisser vide pour ne pas changer):",
+            validate=validate_optional_sold,
+        ).execute()
+
+        sold = float(sold_input.replace(',', '.')) if sold_input else None
+
+        status_choices = [
+            Choice(value=None, name="Ne pas modifier"),
+            Choice(value=True, name="Signé"),
+            Choice(value=False, name="Non signé"),
+        ]
+
+        status = inquirer.select(
+            message="Nouveau statut du contrat:",
+            choices=status_choices,
+        ).execute()
 
         updated_contract = self.controller.update_contract(
-            int(contract_id),
-            float(amount) if amount else None,
-            float(sold) if sold else None,
-            status == "1" if status else None,
+            contract_id,
+            amount,
+            sold,
+            status,
             self.current_user
         )
 
@@ -135,22 +232,33 @@ class ContractView:
             print("Vous n'avez pas les droits pour supprimer un contrat.")
             return
 
-        contract_id = input("Saisissez l'ID du contrat à supprimer: ")
+        print("\n=== SUPPRESSION D'UN CONTRAT ===")
 
-        if self.controller.delete_contract(int(contract_id), self.current_user):
+        contracts = self.controller.get_all_contracts()
+        if not contracts:
+            print("Aucun contrat disponible à supprimer.")
+            return
+
+        contract_choices = [
+            Choice(
+                value=contract.id,
+                name=f"ID: {contract.id}, Client: {contract.client.name if contract.client else 'Inconnu'}, Montant: {contract.amount}"
+            )
+            for contract in contracts
+        ]
+
+        contract_id = inquirer.select(
+            message="Sélectionnez un contrat à supprimer:",
+            choices=contract_choices,
+        ).execute()
+
+        confirm = inquirer.confirm(
+            message=f"Êtes-vous sûr de vouloir supprimer le contrat {contract_id} ?",
+            default=False,
+        ).execute()
+
+        if confirm and self.controller.delete_contract(contract_id, self.current_user):
             print("Contrat supprimé avec succès.")
         else:
-            print("Échec de la suppression du contrat.")
-
-def validate_amount(input_str):
-    try:
-        input_str = input_str.replace(',', '.')
-        amount = float(input_str)
-        if amount < 0:
-            print("Le montant ne peut pas être négatif.")
-            return None
-        return amount
-    except ValueError:
-        print("Veuillez entrer un montant valide (nombre uniquement, sans symboles).")
-        return None
+            print("Suppression annulée ou erreur lors de la suppression.")
             

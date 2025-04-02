@@ -27,6 +27,7 @@ class ClientController:
 
     def update_client(self, client_id, name, email,  phone, company, current_user):
         client = self.get_client_by_id(client_id)
+
         if not client or client.commercial_id != current_user.id:
             return None
         if name :
@@ -59,4 +60,10 @@ class ClientController:
         return self.session.query(Client).filter(Client.id == client_id).first()
 
     def get_client_by_commercial(self, commercial_id):
+        """
+        Retrieve all clients associated with a specific commercial.
+
+        This method queries the database for clients linked to a given commercial ID.
+
+        """
         return self.session.query(Client).filter(Client.commercial_id == commercial_id).all()

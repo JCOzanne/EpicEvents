@@ -87,4 +87,10 @@ class EventController:
         return self.session.query(Event).all()
 
     def get_events_by_support(self, support_id):
+        """
+        Retrieve all events associated with a specific support person.
+
+        This method queries the database for events linked to a given support ID.
+
+        """
         return self.session.query(Event).filter(Event.support_id == support_id).all()

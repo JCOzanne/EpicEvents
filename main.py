@@ -9,6 +9,14 @@ from db.database import engine, Base, SessionLocal
 
 
 def initialize_roles():
+    """
+    Initialize the roles in the database.
+
+    This function checks if any roles exist in the database.
+    If no roles are found, it creates three default roles: commercial, support, and gestion.
+
+    :return: None
+    """
     session = SessionLocal()
 
     if session.query(Role).count() == 0:

@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 from datetime import date, timedelta
 from controllers.event_controller import EventController
 from models.events import Event
@@ -8,6 +8,7 @@ from models.clients import Client
 from models.users import User
 from models.roles import Role
 from sqlalchemy.orm import Session
+from views.event_view import EventView
 
 
 @pytest.fixture

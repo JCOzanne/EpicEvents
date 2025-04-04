@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, ANY
 from sqlalchemy.orm import Session
 
 from controllers.user_controller import UserController
@@ -8,6 +8,7 @@ from models.roles import Role
 from models.clients import Client
 from models.contracts import Contract
 from models.events import Event
+from views.user_view import UserView
 from auth import generate_token, delete_token, verify_token
 
 @pytest.fixture
@@ -37,6 +38,13 @@ def sample_user(sample_role):
     )
     user.role = sample_role
     return user
+
+@pytest.fixture
+def user_view(user_controller):
+    view = UserView()
+    view.controller = user_controller
+    view.current_user = Mock(id=1, role=Mock(name="gestion"))
+    return view
 
 def test_successful_login(user_controller, sample_user, mock_db_session):
     mock_db_session.query().filter().first.return_value = sample_user
@@ -105,3 +113,40 @@ def test_logout():
 
     with pytest.raises(FileNotFoundError):
         open(".jwt_token", "r")
+
+
+def test_view_login_flow(user_view, user_controller, monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "cle_secrete_jwt")
+    mock_role = Mock(spec=Role)
+    mock_role.name = "gestion"
+
+    mock_user = Mock(
+        id=1,
+        name="Admin",
+        role=mock_role
+    )
+
+    with patch('views.user_view.inquirer.text') as mock_text, \
+            patch('views.user_view.inquirer.secret') as mock_secret, \
+            patch.object(user_controller, 'authenticate', return_value=mock_user), \
+            patch('auth.jwt.encode') as mock_jwt_encode:
+        mock_text.return_value.execute.return_value = "admin@test.com"
+        mock_secret.return_value.execute.return_value = "password"
+        mock_jwt_encode.return_value = "fake_token"
+        result = user_view.login_prompt()
+
+        assert result is True
+        mock_jwt_encode.assert_called_once_with(
+            {
+                'user_id': 1,
+                'role': 'gestion',
+                'exp': ANY
+            },
+            "cle_secrete_jwt",
+            algorithm='HS256'
+        )
+
+def test_view_create_user_validation(user_view):
+    # Test validation email
+    assert user_view.validate_email("invalid") == "Veuillez entrer un email valide"
+    assert user_view.validate_email("valid@test.com") is True

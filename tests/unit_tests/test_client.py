@@ -8,6 +8,8 @@ from models.users import User
 from models.roles import Role
 from sqlalchemy.orm import Session
 
+from views.client_view import ClientView
+
 
 @pytest.fixture
 def mock_db_session():
@@ -65,6 +67,20 @@ def sample_client(sample_commercial):
     client.contracts = [contract_mock]
     return client
 
+
+@pytest.fixture
+def client_view():
+    mock_role = Mock()
+    mock_role.name = "commercial"
+
+    user = Mock()
+    user.id = 1
+    user.role = mock_role
+
+    view = ClientView(current_user=user)
+    view.controller = Mock(spec=ClientController)
+    return view
+
 def test_create_client_success(client_controller, sample_commercial):
     new_client = client_controller.create_client(
         "Nouveau Client",
@@ -114,3 +130,30 @@ def test_display_clients_by_commercial(client_controller, sample_commercial):
 
     assert len(clients) == 1
     assert clients[0].name == "Client Test"
+
+
+def test_view_client_creation(client_view, capsys):
+    client_view.current_user.role.name = "commercial"
+    mock_client = Mock()
+    mock_client.name = "Client Test"
+    client_view.controller.create_client.return_value = mock_client
+
+    with patch('views.client_view.inquirer.text') as mock_text:
+        mock_text.side_effect = [
+            Mock(execute=lambda: "Client Test"),
+            Mock(execute=lambda: "client@test.com"),
+            Mock(execute=lambda: "0123456789"),
+            Mock(execute=lambda: "Entreprise Test")
+        ]
+
+        client_view.create_client_prompt()
+        client_view.controller.create_client.assert_called_once_with(
+            "Client Test",
+            "client@test.com",
+            "0123456789",
+            "Entreprise Test",
+            client_view.current_user
+        )
+        output = capsys.readouterr().out
+
+        assert "Le client Client Test a été créé avec succès." in output

@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock, MagicMock, patch
 from controllers.contract_controller import ContractController
 from models.events import Event
 from models.contracts import Contract
@@ -7,6 +7,8 @@ from models.clients import Client
 from models.users import User
 from models.roles import Role
 from sqlalchemy.orm import Session
+
+from views.contract_view import ContractView
 
 
 @pytest.fixture
@@ -80,6 +82,12 @@ def init_roles():
     Role(name="gestion")
     Role(name="support")
 
+@pytest.fixture
+def contract_view():
+    view = ContractView(current_user=Mock(role=Mock(name="gestion")))
+    view.controller = Mock(spec=ContractController)
+    return view
+
 def test_create_contract_success(contract_controller, sample_client):
     gestion_role = Role(name="gestion")
     current_user = Mock(spec=User)
@@ -152,3 +160,45 @@ def test_display_unpaid_contracts(contract_controller):
 
     assert len(contracts) == 1
     assert contracts[0].sold > 0
+
+
+def test_contract_display(contract_view, capsys):
+    test_contract = Mock(
+        amount=10000.0,
+        sold=5000.0,
+        client=Mock(name="Client Test"),
+        status=False
+    )
+    contract_view.controller.get_all_contracts.return_value = [test_contract]
+
+    contract_view.display_contracts()
+
+    output = capsys.readouterr().out
+    assert "Client Test" in output
+    assert "10000.0" in output
+    assert "Non signé" in output
+
+
+def test_contract_creation(contract_view):
+    contract_view.current_user.role.name = "gestion"
+    mock_client = Mock(id=1, name="Client Test")
+    contract_view.client_controller = Mock()
+    contract_view.client_controller.get_all_clients.return_value = [mock_client]
+
+    with patch('views.contract_view.inquirer.text') as mock_text, \
+            patch('views.contract_view.inquirer.select') as mock_select, \
+            patch('views.contract_view.inquirer.confirm') as mock_confirm:
+        mock_text.side_effect = [
+            Mock(execute=lambda: "10000"),
+            Mock(execute=lambda: "5000")
+        ]
+        mock_select.return_value.execute.return_value = 1
+        mock_confirm.return_value.execute.return_value = False
+        contract_view.create_contract_prompt()
+        contract_view.controller.create_contract.assert_called_once_with(
+            1,
+            10000.0,
+            5000.0,
+            False,
+            contract_view.current_user
+        )

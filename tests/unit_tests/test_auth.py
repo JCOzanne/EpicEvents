@@ -1,5 +1,6 @@
 import pytest
 import pendulum
+import os
 from unittest.mock import Mock, patch, mock_open
 import jwt
 from auth import generate_token, verify_token, save_token, load_token, delete_token
@@ -106,3 +107,8 @@ def test_full_token_cycle(sample_user, tmp_path):
 
         assert payload['user_id'] == sample_user.id
         assert payload['role'] == sample_user.role.name
+
+def teardown_module(module):
+    if os.path.exists(".jwt_token"):
+        os.remove(".jwt_token")
+

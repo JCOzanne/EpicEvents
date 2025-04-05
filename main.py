@@ -1,3 +1,6 @@
+from sentry_config import init_sentry
+init_sentry()
+
 import bcrypt
 import sys
 
@@ -5,7 +8,7 @@ from models.roles import Role
 from models.users import User
 from views.menu_view import MenuView
 from views.user_view import UserView
-from db.database import engine, Base, SessionLocal
+from db.database import SessionLocal
 
 
 def initialize_roles():
@@ -31,6 +34,7 @@ def initialize_roles():
 
     session.close()
 
+
 def create_admin_user():
     session = SessionLocal()
 
@@ -53,6 +57,7 @@ def create_admin_user():
         print("Utilisateur admin créé avec succès.")
 
     session.close()
+
 
 def main():
     user_view = UserView()

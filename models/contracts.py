@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from db.database import Base
 
+
 class Contract(Base):
     __tablename__ = 'contract'
     id = Column(Integer, primary_key=True)

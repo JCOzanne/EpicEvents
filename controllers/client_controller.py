@@ -1,4 +1,5 @@
 import pendulum
+import sentry_sdk
 
 from db.database import SessionLocal
 from models.clients import Client
@@ -23,6 +24,10 @@ class ClientController:
         )
         self.session.add(new_client)
         self.session.commit()
+        sentry_sdk.capture_message(
+            f"[CLIENT] Commercial {current_user.email} a créé le client {name} ({email})",
+            level="info"
+        )
         return new_client
 
     def update_client(self, client_id, name, email,  phone, company, current_user):
@@ -30,13 +35,13 @@ class ClientController:
 
         if not client or client.commercial_id != current_user.id:
             return None
-        if name :
+        if name:
             client.name = name
-        if email :
+        if email:
             client.email = email
-        if phone :
+        if phone:
             client.phone = phone
-        if company :
+        if company:
             client.company = company
 
         client.date_updated = pendulum.today().to_date_string()
@@ -51,7 +56,6 @@ class ClientController:
         self.session.delete(client)
         self.session.commit()
         return True
-
 
     def get_all_clients(self):
         return self.session.query(Client).all()

@@ -15,11 +15,13 @@ from views.event_view import EventView
 def mock_db_session():
     return Mock(spec=Session)
 
+
 @pytest.fixture
 def event_controller(mock_db_session):
     controller = EventController()
     controller.session = mock_db_session
     return controller
+
 
 @pytest.fixture
 def sample_roles():
@@ -28,6 +30,7 @@ def sample_roles():
         Role(name="support"),
         Role(name="gestion")
     ]
+
 
 @pytest.fixture
 def sample_commercial(sample_roles):
@@ -38,6 +41,7 @@ def sample_commercial(sample_roles):
     )
     return user
 
+
 @pytest.fixture
 def sample_support(sample_roles):
     user = User(
@@ -47,6 +51,7 @@ def sample_support(sample_roles):
     )
     return user
 
+
 @pytest.fixture
 def sample_gestion(sample_roles):
     user = User(
@@ -55,6 +60,7 @@ def sample_gestion(sample_roles):
         role=sample_roles[2]
     )
     return user
+
 
 @pytest.fixture
 def sample_client(sample_commercial):
@@ -69,6 +75,7 @@ def sample_client(sample_commercial):
     )
     return client
 
+
 @pytest.fixture
 def sample_contract(sample_client):
     contract = Contract(
@@ -77,6 +84,7 @@ def sample_contract(sample_client):
         status=True
     )
     return contract
+
 
 @pytest.fixture
 def sample_event(sample_contract, sample_support):
@@ -89,6 +97,7 @@ def sample_event(sample_contract, sample_support):
         start_date=date.today() + timedelta(days=5),
         end_date=date.today() + timedelta(days=6)
     )
+
 
 def test_create_event_success(event_controller, sample_commercial, sample_contract, sample_client):
     sample_contract.client = sample_client
@@ -106,6 +115,7 @@ def test_create_event_success(event_controller, sample_commercial, sample_contra
 
     assert result is not None
 
+
 def test_create_event_without_permission(event_controller, sample_support):
     result = event_controller.create_event(
         name="New Event",
@@ -119,6 +129,7 @@ def test_create_event_without_permission(event_controller, sample_support):
     )
 
     assert result is None
+
 
 def test_create_event_unsigned_contract(event_controller, sample_commercial):
     unsigned_contract = Mock(spec=Contract, status=False)
@@ -136,6 +147,7 @@ def test_create_event_unsigned_contract(event_controller, sample_commercial):
 
     assert result is None
 
+
 def test_update_event_by_support(event_controller, sample_event, sample_support):
     event_controller.session.query().filter().first.return_value = sample_event
     result = event_controller.update_events(
@@ -145,6 +157,7 @@ def test_update_event_by_support(event_controller, sample_event, sample_support)
     )
 
     assert result.name == "Updated Name"
+
 
 def test_update_event_by_gestion(event_controller, sample_event, sample_gestion):
     event_controller.session.query().filter().first.return_value = sample_event
@@ -156,6 +169,7 @@ def test_update_event_by_gestion(event_controller, sample_event, sample_gestion)
 
     assert result.location == "New Location"
 
+
 def test_update_event_without_permission(event_controller, sample_event, sample_commercial):
     event_controller.session.query().filter().first.return_value = sample_event
     result = event_controller.update_events(
@@ -166,6 +180,7 @@ def test_update_event_without_permission(event_controller, sample_event, sample_
 
     assert result is None
 
+
 def test_delete_event_by_gestion(event_controller, sample_event, sample_gestion):
     event_controller.session.query().filter().first.return_value = sample_event
     result = event_controller.delete_event(1, sample_gestion)
@@ -173,10 +188,12 @@ def test_delete_event_by_gestion(event_controller, sample_event, sample_gestion)
     assert result is True
     event_controller.session.delete.assert_called_once_with(sample_event)
 
+
 def test_delete_event_without_permission(event_controller, sample_event, sample_support):
     result = event_controller.delete_event(1, sample_support)
 
     assert result is False
+
 
 def test_display_events(event_controller, sample_event):
     event_controller.get_all_events = Mock(return_value=[sample_event])
@@ -184,6 +201,7 @@ def test_display_events(event_controller, sample_event):
 
     assert len(events) == 1
     assert events[0].name == "Test Event"
+
 
 def test_display_events_by_support(event_controller, sample_event, sample_support):
     event_controller.get_events_by_support = Mock(return_value=[sample_event])

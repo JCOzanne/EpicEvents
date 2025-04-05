@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from db.database import Base
 
+
 class Event(Base):
     __tablename__ = 'events'
     id = Column(Integer, primary_key=True)

@@ -6,6 +6,7 @@ import re
 from controllers.user_controller import UserController
 from auth import generate_token, verify_token, delete_token
 
+
 class UserView:
     def __init__(self):
         self.controller = UserController()
@@ -28,7 +29,7 @@ class UserView:
             validate=EmptyInputValidator(message="Le mot de passe ne peut être vide"),
         ).execute()
 
-        user=self.controller.authenticate(email, password)
+        user = self.controller.authenticate(email, password)
         if user:
             self.current_user = user
             generate_token(user)
@@ -61,17 +62,17 @@ class UserView:
 
         print("=== CREATION D'UTILISATEUR ===")
 
-        name=inquirer.text(message="Nom de l'utilisateur",
-                           validate=EmptyInputValidator(message="Le nom ne peut pas être vide"),
-                           ).execute()
-        email=inquirer.text(message="Email: ",
-                            validate=self.validate_email,
-                            ).execute()
-        password=inquirer.secret(
+        name = inquirer.text(message="Nom de l'utilisateur",
+                             validate=EmptyInputValidator(message="Le nom ne peut pas être vide"),
+                             ).execute()
+        email = inquirer.text(message="Email: ",
+                              validate=self.validate_email,
+                              ).execute()
+        password = inquirer.secret(
             message="Mot de passe: ",
             validate=EmptyInputValidator(message="Le mail ne peut être vide"),
         ).execute()
-        role_choice=inquirer.select(
+        role_choice = inquirer.select(
             message="Rôle",
             choices=[
                 Choice(value=1, name="Commercial"),
@@ -80,7 +81,7 @@ class UserView:
             ],
         ).execute()
 
-        user=self.controller.create_user(name, email, password, role_choice, self.current_user.id)
+        user = self.controller.create_user(name, email, password, role_choice, self.current_user.id)
         if user:
             print(f"L'utilisateur {user.name} crée avec succés")
         else:
@@ -153,8 +154,6 @@ class UserView:
             print(f"Utilisateur {user.name} mis à jour avec succès!")
         else:
             print("Erreur lors de la mise à jour de l'utilisateur.")
-
-
 
     def delete_user_prompt(self):
         if not self.current_user or not self.controller.check_permission(self.current_user.id, "gestion"):

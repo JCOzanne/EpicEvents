@@ -51,7 +51,7 @@ class ContractView:
 
     def display_unpaid_contracts(self):
         contracts = self.controller.get_unpaid_contracts()
-        print("\=== LISTE DES CONTRATS NON PAYES ENTIEREMENT ===")
+        print("=== LISTE DES CONTRATS NON PAYES ENTIEREMENT ===")
         if not contracts:
             print("Les contrats ont été entièrement payés")
             return
@@ -130,6 +130,7 @@ class ContractView:
             print(f"Contrat créé avec succès pour le client ID {client_id}")
         else:
             print("Erreur lors de la création du contrat.")
+
     def update_contract_prompt(self):
         print("\n=== MISE A JOUR D'UN CONTRAT ===")
 
@@ -261,4 +262,3 @@ class ContractView:
             print("Contrat supprimé avec succès.")
         else:
             print("Suppression annulée ou erreur lors de la suppression.")
-            

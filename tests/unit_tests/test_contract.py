@@ -15,17 +15,20 @@ from views.contract_view import ContractView
 def mock_db_session():
     return Mock(spec=Session)
 
+
 @pytest.fixture
 def contract_controller(mock_db_session):
     controller = ContractController()
     controller.session = mock_db_session
     return controller
 
+
 @pytest.fixture
 def sample_role():
     role = Role(name="gestion")
     role.id = 3
     return role
+
 
 @pytest.fixture
 def sample_commercial():
@@ -42,6 +45,7 @@ def sample_commercial():
     user.role = commercial_role
     return user
 
+
 @pytest.fixture
 def sample_client(sample_commercial):
     client = Client(
@@ -54,6 +58,7 @@ def sample_client(sample_commercial):
     )
     client.commercial = sample_commercial
     return client
+
 
 @pytest.fixture
 def sample_contract(sample_client):
@@ -76,17 +81,20 @@ def sample_contract(sample_client):
     contract.events = [event_mock]
     return contract
 
+
 @pytest.fixture(autouse=True)
 def init_roles():
     Role(name="commercial")
     Role(name="gestion")
     Role(name="support")
 
+
 @pytest.fixture
 def contract_view():
     view = ContractView(current_user=Mock(role=Mock(name="gestion")))
     view.controller = Mock(spec=ContractController)
     return view
+
 
 def test_create_contract_success(contract_controller, sample_client):
     gestion_role = Role(name="gestion")
@@ -103,6 +111,7 @@ def test_create_contract_success(contract_controller, sample_client):
 
     assert new_contract is not None
 
+
 def test_create_contract_without_permission(contract_controller):
     non_gestion_user = Mock(role=Mock(name="commercial"))
     result = contract_controller.create_contract(
@@ -114,6 +123,7 @@ def test_create_contract_without_permission(contract_controller):
     )
 
     assert result is None
+
 
 def test_update_contract(contract_controller, sample_contract, sample_commercial):
     contract_controller.session.query().filter().first.return_value = sample_contract
@@ -129,6 +139,7 @@ def test_update_contract(contract_controller, sample_contract, sample_commercial
     assert updated_contract.amount == 1500.0
     contract_controller.session.commit.assert_called_once()
 
+
 def test_delete_contract(contract_controller, sample_contract):
     gestion_role = Role(name="gestion")
     current_user = Mock(spec=User)
@@ -138,12 +149,14 @@ def test_delete_contract(contract_controller, sample_contract):
 
     assert result is True
 
+
 def test_display_contracts(contract_controller, sample_contract):
     contract_controller.get_all_contracts = Mock(return_value=[sample_contract])
     contracts = contract_controller.get_all_contracts()
 
     assert len(contracts) == 1
     assert contracts[0].client.name == "Client Test"
+
 
 def test_display_unsigned_contracts(contract_controller):
     unsigned_contract = Mock(spec=Contract, status=False)
@@ -152,6 +165,7 @@ def test_display_unsigned_contracts(contract_controller):
 
     assert len(contracts) == 1
     assert not contracts[0].status
+
 
 def test_display_unpaid_contracts(contract_controller):
     unpaid_contract = Mock(spec=Contract, sold=500.0, amount=1000.0)

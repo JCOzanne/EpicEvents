@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from db.database import Base
 
+
 class Client(Base):
     __tablename__ = 'client'
     id = Column(Integer, primary_key=True)

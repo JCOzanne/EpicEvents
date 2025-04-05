@@ -5,12 +5,14 @@ from unittest.mock import Mock, patch, mock_open
 import jwt
 from auth import generate_token, verify_token, save_token, load_token, delete_token
 
+
 @pytest.fixture
 def sample_user():
     user = Mock()
     user.id = 1
     user.role.name = "gestion"
     return user
+
 
 @pytest.fixture
 def valid_token(sample_user):
@@ -24,6 +26,7 @@ def valid_token(sample_user):
         "cle_secrete_jwt",
         algorithm="HS256"
     )
+
 
 def test_generate_token_valid(sample_user):
     with patch('os.getenv', return_value='cle_secrete_jwt'), \
@@ -41,6 +44,7 @@ def test_generate_token_valid(sample_user):
 
         assert token == "test_token"
 
+
 def test_verify_token_valid(valid_token):
     with patch('jwt.decode') as mock_decode:
         mock_decode.return_value = {'user_id': 1, 'role': 'gestion'}
@@ -48,6 +52,7 @@ def test_verify_token_valid(valid_token):
 
         assert payload['user_id'] == 1
         assert payload['role'] == "gestion"
+
 
 def test_verify_token_expired():
     with patch('jwt.decode') as mock_decode, \
@@ -58,6 +63,7 @@ def test_verify_token_expired():
 
         assert result is None
 
+
 def test_verify_token_invalid():
     with patch('jwt.decode') as mock_decode, \
             patch('builtins.print') as mock_print:
@@ -66,6 +72,7 @@ def test_verify_token_invalid():
         mock_print.assert_called_with("Token invalide")
 
         assert result is None
+
 
 def test_save_and_load_token():
     m = mock_open()
@@ -81,6 +88,7 @@ def test_save_and_load_token():
 
         assert token == "test_token"
 
+
 def test_delete_token():
     with patch("os.path.exists") as mock_exists, \
             patch("os.remove") as mock_remove, \
@@ -95,6 +103,7 @@ def test_delete_token():
         mock_remove.assert_not_called()
         mock_print.assert_called_with("Aucun token à supprimer")
 
+
 def test_full_token_cycle(sample_user, tmp_path):
     TOKEN_FILE = tmp_path / ".jwt_token"
 
@@ -108,7 +117,7 @@ def test_full_token_cycle(sample_user, tmp_path):
         assert payload['user_id'] == sample_user.id
         assert payload['role'] == sample_user.role.name
 
+
 def teardown_module(module):
     if os.path.exists(".jwt_token"):
         os.remove(".jwt_token")
-

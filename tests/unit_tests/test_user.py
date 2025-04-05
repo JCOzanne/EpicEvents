@@ -11,9 +11,11 @@ from models.events import Event
 from views.user_view import UserView
 from auth import generate_token, delete_token, verify_token
 
+
 @pytest.fixture
 def mock_db_session():
     return Mock(spec=Session)
+
 
 @pytest.fixture
 def user_controller(mock_db_session):
@@ -21,11 +23,13 @@ def user_controller(mock_db_session):
     controller.session = mock_db_session
     return controller
 
+
 @pytest.fixture
 def sample_role():
     role = Role(name="gestion")
     role.id = 1
     return role
+
 
 @pytest.fixture
 def sample_user(sample_role):
@@ -39,12 +43,14 @@ def sample_user(sample_role):
     user.role = sample_role
     return user
 
+
 @pytest.fixture
 def user_view(user_controller):
     view = UserView()
     view.controller = user_controller
     view.current_user = Mock(id=1, role=Mock(name="gestion"))
     return view
+
 
 def test_successful_login(user_controller, sample_user, mock_db_session):
     mock_db_session.query().filter().first.return_value = sample_user
@@ -53,12 +59,14 @@ def test_successful_login(user_controller, sample_user, mock_db_session):
 
     assert result == sample_user
 
+
 def test_failed_login_wrong_password(user_controller, sample_user, mock_db_session):
     mock_db_session.query().filter().first.return_value = sample_user
     user_controller.verify_password = Mock(return_value=False)
     result = user_controller.authenticate("admin@test.com", "wrongpass")
 
     assert result is None
+
 
 def test_user_creation(user_controller, sample_role, mock_db_session):
     user_controller.check_permission = Mock(return_value=True)
@@ -69,6 +77,7 @@ def test_user_creation(user_controller, sample_role, mock_db_session):
     assert new_user.name == "New User"
     mock_db_session.add.assert_called_once()
     mock_db_session.commit.assert_called_once()
+
 
 def test_user_update(user_controller, sample_user, mock_db_session):
     mock_db_session.query().filter().first.return_value = sample_user
@@ -82,6 +91,7 @@ def test_user_update(user_controller, sample_user, mock_db_session):
     assert updated_user.name == "Updated Name"
     mock_db_session.commit.assert_called_once()
 
+
 def test_user_deletion(user_controller, sample_user, mock_db_session):
     mock_db_session.query().filter().first.return_value = sample_user
     user_controller.check_permission = Mock(return_value=True)
@@ -90,6 +100,7 @@ def test_user_deletion(user_controller, sample_user, mock_db_session):
     assert result is True
     mock_db_session.delete.assert_called_once_with(sample_user)
     mock_db_session.commit.assert_called_once()
+
 
 def test_token_operations():
     test_user = Mock()
@@ -104,6 +115,7 @@ def test_token_operations():
 
         assert payload['user_id'] == 1
         assert payload['role'] == 'gestion'
+
 
 def test_logout():
     with open(".jwt_token", "w") as f:
@@ -146,7 +158,7 @@ def test_view_login_flow(user_view, user_controller, monkeypatch):
             algorithm='HS256'
         )
 
+
 def test_view_create_user_validation(user_view):
-    # Test validation email
     assert user_view.validate_email("invalid") == "Veuillez entrer un email valide"
     assert user_view.validate_email("valid@test.com") is True

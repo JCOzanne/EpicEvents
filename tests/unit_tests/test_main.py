@@ -6,9 +6,11 @@ from models.roles import Role
 from models.users import User
 from sqlalchemy.orm import Session
 
+
 @pytest.fixture
 def mock_db_session():
     return Mock(spec=Session)
+
 
 def test_initialize_roles(mock_db_session):
     with patch('main.SessionLocal', return_value=mock_db_session):
@@ -18,6 +20,7 @@ def test_initialize_roles(mock_db_session):
 
         assert mock_db_session.add_all.call_count == 1
         mock_db_session.commit.assert_called_once()
+
 
 def test_create_admin_user(mock_db_session):
     mock_role = Mock()
@@ -33,6 +36,7 @@ def test_create_admin_user(mock_db_session):
         mock_db_session.add.assert_called_once()
         mock_db_session.commit.assert_called_once()
 
+
 def test_main_with_login_arg(mock_db_session):
     testargs = ["main.py", "login"]
     with patch.object(sys, 'argv', testargs), \
@@ -43,6 +47,7 @@ def test_main_with_login_arg(mock_db_session):
 
         mock_user_view.return_value.login_prompt.assert_called_once()
 
+
 def test_main_without_login_arg_authenticated(mock_db_session):
     with patch('main.UserView') as mock_user_view, \
             patch('main.MenuView'), \
@@ -50,6 +55,7 @@ def test_main_without_login_arg_authenticated(mock_db_session):
         main()
 
         mock_user_view.return_value.check_authentication.assert_called_once()
+
 
 def test_main_without_login_arg_not_authenticated(mock_db_session, capsys):
     with patch('main.UserView') as mock_user_view, \

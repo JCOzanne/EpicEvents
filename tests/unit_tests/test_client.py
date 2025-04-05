@@ -15,17 +15,20 @@ from views.client_view import ClientView
 def mock_db_session():
     return Mock(spec=Session)
 
+
 @pytest.fixture
 def client_controller(mock_db_session):
     controller = ClientController()
     controller.session = mock_db_session
     return controller
 
+
 @pytest.fixture
 def sample_role():
     role = Role(name="commercial")
     role.id = 2
     return role
+
 
 @pytest.fixture
 def sample_commercial(sample_role):
@@ -38,6 +41,7 @@ def sample_commercial(sample_role):
     )
     user.role = sample_role
     return user
+
 
 @pytest.fixture
 def sample_client(sample_commercial):
@@ -61,8 +65,8 @@ def sample_client(sample_commercial):
             parents={},
             manager=MagicMock(
                 __getitem__=lambda self, key: MagicMock(impl=Mock())
+            )
         )
-    )
     )
     client.contracts = [contract_mock]
     return client
@@ -81,6 +85,7 @@ def client_view():
     view.controller = Mock(spec=ClientController)
     return view
 
+
 def test_create_client_success(client_controller, sample_commercial):
     new_client = client_controller.create_client(
         "Nouveau Client",
@@ -94,6 +99,7 @@ def test_create_client_success(client_controller, sample_commercial):
     client_controller.session.add.assert_called_once()
     client_controller.session.commit.assert_called_once()
 
+
 def test_create_client_without_permission(client_controller):
     non_commercial_user = Mock()
     non_commercial_user.role.name = "support"
@@ -103,6 +109,7 @@ def test_create_client_without_permission(client_controller):
 
     assert result is None
 
+
 def test_update_client(client_controller, sample_commercial, sample_client):
     client_controller.session.query().filter().first.return_value = sample_client
     updated_client = client_controller.update_client(
@@ -111,6 +118,7 @@ def test_update_client(client_controller, sample_commercial, sample_client):
 
     assert updated_client.name == "Nouveau Nom"
     client_controller.session.commit.assert_called_once()
+
 
 def test_delete_client(client_controller, sample_commercial, sample_client):
     client_controller.session.query().filter().first.return_value = sample_client

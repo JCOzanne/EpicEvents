@@ -2,7 +2,10 @@ import bcrypt
 import jwt
 import os
 import pendulum
+import sentry_sdk
 from dotenv import load_dotenv
+from sqlalchemy.sql.functions import user
+
 from models.users import User
 from models.roles import Role
 from db.database import SessionLocal
@@ -18,7 +21,7 @@ class UserController:
     def __init__(self):
         self.session = SessionLocal()
 
-    def hash_password(self, password: str) ->str:
+    def hash_password(self, password: str) -> str:
         """
         Secure password hashing with bcrypt
         :param password:the password og the user
@@ -38,7 +41,7 @@ class UserController:
         provided_password_bytes = provided_password.encode('utf-8') if isinstance(provided_password, str) else provided_password
         return bcrypt.checkpw(provided_password_bytes, stored_password.encode('utf-8'))
 
-    def create_user(self, name: str, email: str, password: str, role_id: int, current_user_id: int) -> User|None:
+    def create_user(self, name: str, email: str, password: str, role_id: int, current_user_id: int) -> User | None:
         if not self.check_permission(current_user_id, "gestion"):
             return None
 
@@ -46,9 +49,10 @@ class UserController:
         new_user = User(name=name, email=email, password=hashed_password, role_id=role_id)
         self.session.add(new_user)
         self.session.commit()
+        sentry_sdk.capture_message(f"Collaborateur créé : {user.name} ({user.email})", level="info")
         return new_user
 
-    def authenticate(self, email: str, password: str) -> bool|None:
+    def authenticate(self, email: str, password: str) -> bool | None:
         """
         User authentication
         :param email: the email of the user
@@ -60,13 +64,13 @@ class UserController:
             return user
         return None
 
-    def get_user_by_id(self, user_id: int) -> User|None:
+    def get_user_by_id(self, user_id: int) -> User | None:
         return self.session.query(User).filter(User.id == user_id).first()
 
-    def get_all_users(self) -> list[User|None]:
+    def get_all_users(self) -> list[User | None]:
         return self.session.query(User).all()
 
-    def update_user(self, user_id: int, current_user_id: int, name=None, email=None, role_id=None) -> User|None:
+    def update_user(self, user_id: int, current_user_id: int, name=None, email=None, role_id=None) -> User | None:
         if not self.check_permission(current_user_id, "gestion"):
             return None
 
@@ -82,6 +86,7 @@ class UserController:
             user.role_id = role_id
 
         self.session.commit()
+        sentry_sdk.capture_message(f"Collaborateur modifié : {user.name} ({user.email})", level="info")
         return user
 
     def delete_user(self, user_id: int, current_user_id: int) -> bool:
@@ -118,12 +123,12 @@ class UserController:
             'exp': expiration.int_timestamp,
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
-        with open (TOKEN_FILE, "w") as file:
+        with open(TOKEN_FILE, "w") as file:
             file.write(token)
         print("Connexion réussie")
         return token
 
-    def verify_token(self, token: str) -> bool|None:
+    def verify_token(self, token: str) -> bool | None:
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
             user_id = payload['user_id']

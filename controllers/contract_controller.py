@@ -1,5 +1,5 @@
 import pendulum
-from sqlalchemy.sql.functions import current_user
+import sentry_sdk
 
 from db.database import SessionLocal
 from models.contracts import Contract
@@ -22,12 +22,18 @@ class ContractController:
             )
         self.session.add(new_contract)
         self.session.commit()
+        if status:
+            sentry_sdk.capture_message(
+                f"[CONTRAT] Contrat {new_contract.id} signé pour le client {client_id} "
+                f"par {current_user.email} (Montant: {amount})",
+                level="info"
+            )
         print("Contrat crée avec succés")
         return new_contract
 
     def update_contract(self, contract_id, amount, sold, status, current_user):
         contract = self.get_contract_by_id(contract_id)
-        if not contract :
+        if not contract:
             return None
 
         if current_user.role.name != "gestion" and contract.client.commercial_id != current_user.id:
@@ -43,13 +49,13 @@ class ContractController:
         self.session.commit()
         return contract
 
-    def delete_contract(self, contract_id, current_user ):
-        if current_user.role_name != "gestion":
+    def delete_contract(self, contract_id, current_user):
+        if current_user.role.name != "gestion":
             print("Seuls les gestionnaires peuvent supprimer un contrat.")
             return False
 
         contract = self.get_contract_by_id(contract_id)
-        if not contract :
+        if not contract:
             print("contrat introuvable.")
             return False
 
@@ -65,7 +71,7 @@ class ContractController:
         return self.session.query(Contract).filter(Contract.id == contract_id).first()
 
     def get_contracts_by_commercial(self, commercial_id):
-        return(
+        return (
             self.session.query(Contract)
             .join(Contract.client)
             .filter(Contract.client.commercial_id == commercial_id)

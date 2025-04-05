@@ -51,7 +51,7 @@ class ClientView:
             print("Vous n'avez pas les droits pour créer un client")
             return
 
-        print ("\n=== CRÉATION D'UN CLIENT ===")
+        print("\n=== CRÉATION D'UN CLIENT ===")
         name = inquirer.text(
             message="Nom du client: ",
             validate=EmptyInputValidator("Le nom ne peut pas être vide."),
@@ -160,4 +160,3 @@ class ClientView:
 
         for client in clients:
             print(f"ID: {client.id}, Nom: {client.name}, Email: {client.email}, Entreprise: {client.company}")
-

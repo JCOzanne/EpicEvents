@@ -2,7 +2,9 @@ from db.database import SessionLocal
 from models.contracts import Contract
 from models.events import Event
 
+
 class EventController:
+
     def __init__(self):
         self.session = SessionLocal()
 
@@ -81,7 +83,6 @@ class EventController:
         self.session.commit()
         print(f"L'évènement {event.name} a été supprimé avec succès.")
         return True
-
 
     def get_all_events(self):
         return self.session.query(Event).all()

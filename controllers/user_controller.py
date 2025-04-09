@@ -49,7 +49,7 @@ class UserController:
         new_user = User(name=name, email=email, password=hashed_password, role_id=role_id)
         self.session.add(new_user)
         self.session.commit()
-        sentry_sdk.capture_message(f"Collaborateur créé : {user.name} ({user.email})", level="info")
+        sentry_sdk.capture_message(f"Collaborateur créé : {new_user.name} {new_user.email}", level="info")
         return new_user
 
     def authenticate(self, email: str, password: str) -> bool | None:

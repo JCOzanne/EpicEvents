@@ -22,6 +22,36 @@ class EventView:
             return True
         return False
 
+    def prompt_valid_date(self, message, min_date=None, after_date=None):
+        if min_date and isinstance(min_date, pendulum.DateTime):
+            min_date = min_date.date()
+        if after_date and isinstance(after_date, pendulum.DateTime):
+            after_date = after_date.date()
+
+        while True:
+            date_str = inquirer.text(message=message).execute()
+
+            if not re.match(r"^\d{2}/\d{2}/\d{4}$", date_str):
+                print("❌ Format invalide. Utilisez JJ/MM/AAAA.")
+                continue
+
+            try:
+                day, month, year = map(int, date_str.split('/'))
+                date = pendulum.date(year, month, day)
+            except ValueError:
+                print("❌ Date invalide. Veuillez vérifier le jour, le mois et l'année.")
+                continue
+
+            if min_date and date < min_date:
+                print("❌ La date ne peut pas être dans le passé.")
+                continue
+
+            if after_date and date < after_date:
+                print("❌ La date doit être égale ou postérieure à la date de début.")
+                continue
+
+            return date
+
     def display_events(self):
         events = self.controller.get_all_events()
         print("\n=== LISTE DES ÉVÉNEMENTS ===")
@@ -62,48 +92,8 @@ class EventView:
             message="Notes concernant l'événement"
         ).execute()
 
-        def validate_date_format(date_str):
-            if not re.match(r"^\d{2}/\d{2}/\d{4}$", date_str):
-                return "Vous devez saisir une date au format JJ/MM/AAAA."
-            try:
-                day, month, year = map(int, date_str.split('/'))
-                date = pendulum.date(year, month, day)
-
-                if date < pendulum.today().date():
-                    return "La date ne peut pas être dans le passé. Veuillez entrer une date future."
-
-                return True
-            except ValueError:
-                return "Date invalide. Veuillez vérifier la validité du jour, du mois et de l'année."
-
-        start_date_str = inquirer.text(
-            message="Date de début (JJ/MM/AAAA): ",
-            validate=validate_date_format
-        ).execute()
-
-        day, month, year = map(int, start_date_str.split('/'))
-        start_date = pendulum.date(year, month, day)
-
-        def validate_end_date(date_str):
-            result = validate_date_format(date_str)
-            if result is not True:
-                return result
-
-            day, month, year = map(int, date_str.split('/'))
-            end_date = pendulum.date(year, month, day)
-
-            if end_date < start_date:
-                return "La date de fin doit être égale ou postérieure à la date de début."
-
-            return True
-
-        end_date_str = inquirer.text(
-            message="Date de fin (JJ/MM/AAAA): ",
-            validate=validate_end_date
-        ).execute()
-
-        day, month, year = map(int, end_date_str.split('/'))
-        end_date = pendulum.date(year, month, day)
+        start_date = self.prompt_valid_date("Date de début (JJ/MM/AAAA):", min_date=pendulum.today())
+        end_date = self.prompt_valid_date("Date de fin (JJ/MM/AAAA):", min_date=pendulum.today(), after_date=start_date)
 
         contract_id = inquirer.number(
             message="ID du contrat associé: ",
@@ -149,72 +139,13 @@ class EventView:
             message="Notes: "
         ).execute()
 
-        modify_start_date = inquirer.confirm(
-            message="Voulez-vous modifier la date de début ?",
-            default=False
-        ).execute()
-
         start_date = None
-        if modify_start_date:
-            def validate_date_format(date_str):
-                """
-                Validate the end date for an event.
-
-                This method checks if the provided end date string is in the correct format (DD/MM/YYYY),
-                is a valid date, is not in the past, and is not before the start date.
-                """
-                if not re.match(r"^\d{2}/\d{2}/\d{4}$", date_str):
-                    return "Vous devez saisir une date au format JJ/MM/AAAA."
-                try:
-                    day, month, year = map(int, date_str.split('/'))
-                    date = pendulum.date(year, month, day)
-
-                    if date < pendulum.today().date():
-                        return "La date ne peut pas être dans le passé. Veuillez entrer une date future."
-
-                    return True
-                except ValueError:
-                    return "Date invalide. Veuillez vérifier la validité du jour, du mois et de l'année."
-
-            start_date_str = inquirer.text(
-                message="Nouvelle date de début (JJ/MM/AAAA): ",
-                validate=validate_date_format
-            ).execute()
-
-            day, month, year = map(int, start_date_str.split('/'))
-            start_date = pendulum.date(year, month, day)
-
-        modify_end_date = inquirer.confirm(
-            message="Voulez-vous modifier la date de fin ?",
-            default=False
-        ).execute()
+        if inquirer.confirm(message="Voulez-vous modifier la date de début ?", default=False).execute():
+            start_date = self.prompt_valid_date("Nouvelle date de début (JJ/MM/AAAA):", min_date=pendulum.today())
 
         end_date = None
-        if modify_end_date:
-            def validate_end_date(date_str):
-                if not re.match(r"^\d{2}/\d{2}/\d{4}$", date_str):
-                    return "Vous devez saisir une date au format JJ/MM/AAAA."
-                try:
-                    day, month, year = map(int, date_str.split('/'))
-                    date = pendulum.date(year, month, day)
-
-                    if date < pendulum.today().date():
-                        return "La date ne peut pas être dans le passé. Veuillez entrer une date future."
-
-                    if start_date and date < start_date:
-                        return "La date de fin doit être égale ou postérieure à la date de début."
-
-                    return True
-                except ValueError:
-                    return "Date invalide. Veuillez vérifier la validité du jour, du mois et de l'année."
-
-            end_date_str = inquirer.text(
-                message="Nouvelle date de fin (JJ/MM/AAAA): ",
-                validate=validate_end_date
-            ).execute()
-
-            day, month, year = map(int, end_date_str.split('/'))
-            end_date = pendulum.date(year, month, day)
+        if inquirer.confirm(message="Voulez-vous modifier la date de fin ?", default=False).execute():
+            end_date = self.prompt_valid_date("Nouvelle date de fin (JJ/MM/AAAA):", min_date=pendulum.today(), after_date=start_date)
 
         support_id_str = inquirer.text(
             message="ID du support assigné (laissez vide pour ne pas modifier): "
@@ -265,12 +196,6 @@ class EventView:
             print("Suppression annulée ou échec de la suppression.")
 
     def display_events_by_support(self):
-        """
-        Display events assigned to the current support user.
-
-        This method retrieves and displays the events associated
-        with the current user if their role is 'support'.
-        """
         if self.current_user.role.name != 'support':
             print("Vous n'avez pas les droits pour afficher ces événements.")
             return

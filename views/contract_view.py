@@ -14,6 +14,15 @@ class ContractView:
         self.client_controller = ClientController()
 
     def check_authentication(self):
+        """Checks user authentication.
+
+        Verifies if a user is authenticated by checking for a valid token.
+        If a valid token is found, the current_user attribute is updated
+        and the function returns True. Otherwise, it returns False.
+
+        Returns:
+            bool: True if authenticated, False otherwise.
+        """
         from auth import verify_token
         payload = verify_token()
         if payload:
@@ -82,12 +91,13 @@ class ContractView:
         ).execute()
 
         def validate_amount(amount):
+
             """
             Validate the contract amount.
 
-        This method checks if the given amount is a positive number.
-        It returns True if the amount is valid (a number),
-        otherwise it returns the validation error message.
+            This method checks if the given amount is a positive number.
+            It returns True if the amount is valid (a number),
+            otherwise it returns the validation error message.
             """
             try:
                 amount = float(amount.replace(',', '.'))

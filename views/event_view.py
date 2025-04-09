@@ -15,6 +15,14 @@ class EventView:
         self.user_controller = UserController()
 
     def check_authentication(self):
+        """Checks user authentication.
+
+        Verifies if a user is authenticated by checking for a valid token.
+        If a valid token is found, the current_user attribute is updated
+        and the function returns True. Otherwise, it returns False.
+
+        Returns: bool: True if authenticated, False otherwise.
+        """
         from auth import verify_token
         payload = verify_token()
         if payload:
@@ -23,6 +31,10 @@ class EventView:
         return False
 
     def prompt_valid_date(self, message, min_date=None, after_date=None):
+        """
+        checks that the date is in DD/MM/YYYY format, that it is not in the past,
+        and that the start date is before the end date
+        """
         if min_date and isinstance(min_date, pendulum.DateTime):
             min_date = min_date.date()
         if after_date and isinstance(after_date, pendulum.DateTime):
@@ -32,22 +44,22 @@ class EventView:
             date_str = inquirer.text(message=message).execute()
 
             if not re.match(r"^\d{2}/\d{2}/\d{4}$", date_str):
-                print("❌ Format invalide. Utilisez JJ/MM/AAAA.")
+                print("Format invalide. Utilisez JJ/MM/AAAA.")
                 continue
 
             try:
                 day, month, year = map(int, date_str.split('/'))
                 date = pendulum.date(year, month, day)
             except ValueError:
-                print("❌ Date invalide. Veuillez vérifier le jour, le mois et l'année.")
+                print("Date invalide. Veuillez vérifier le jour, le mois et l'année.")
                 continue
 
             if min_date and date < min_date:
-                print("❌ La date ne peut pas être dans le passé.")
+                print("La date ne peut pas être dans le passé.")
                 continue
 
             if after_date and date < after_date:
-                print("❌ La date doit être égale ou postérieure à la date de début.")
+                print("La date doit être égale ou postérieure à la date de début.")
                 continue
 
             return date

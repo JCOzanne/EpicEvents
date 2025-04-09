@@ -26,6 +26,15 @@ class MenuView:
         return True
 
     def load_user_from_token(self):
+        """
+        Loads user data from a saved token.
+
+        Attempts to load a user from a token stored in a file. If the token exists and is valid,
+        the corresponding user is returned and a success message is printed. If the token is
+        invalid or doesn't exist, None is returned.
+
+        Returns: User or None: The loaded user object if successful, None otherwise.
+        """
         if os.path.exists(self.token_file):
             with open(self.token_file, "r") as file:
                 token = file.read().strip()
@@ -138,7 +147,7 @@ class MenuView:
             print("\n=== GESTION DES CLIENTS ===")
 
             choices = [
-                Choice(value="1", name="Afficher tous lesclients"),
+                Choice(value="1", name="Afficher tous les clients"),
                 Choice(value="2", name="Afficher mes clients (commerciaux uniquement)"),
                 Choice(value="3", name="Créer un client"),
                 Choice(value="4", name="Mettre à jour un client"),

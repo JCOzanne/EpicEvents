@@ -97,7 +97,7 @@ print(secrets.token_urlsafe(32))
 L'application utilise **MySQL**.  
 Vous devez créer la base de données et un utilisateur associé.
 
-###  MySQL Command Client (https://dev.mysql.com/downloads/installer/ ):
+### Avec MySQL Command Client (https://dev.mysql.com/downloads/installer/ ):
 ```sql
 CREATE DATABASE epicevents_db ;
 CREATE USER 'epic_user'@'localhost' IDENTIFIED BY 'epic_password';
@@ -113,13 +113,5 @@ Une fois les dépendances installées et la base configurée :
 python main.py login
 ```
 Vous accéderez alors au menu principal de l'application puis aux menus interactifs pour gérer les utilisateurs, clients, contrats, événements.
-
----
-
-## Sécurité
-
-- Les mots de passe sont hachés avec `bcrypt`
-- Les accès sont contrôlés selon les rôles sous forme de permissions
-- Les tokens JWT sont signés avec une `SECRET_KEY` secrète
 
 ---

@@ -9,11 +9,11 @@ Elle permet à l'entreprise Epic Events de gérer ses utilisateurs, clients, con
 ## Fonctionnalités principales
 
 - Authentification sécurisée par JWT
-- Gestion des rôles des employés d'Epic Events : admin, commercial, support,
-- Gestion des employés d'Epic Events : création, mise à jour, rôle,
-- Gestion des clients : coordonnées, contrats et événements liés,
+- Gestion des rôles des employés d'Epic Events : gestion, commercial, support,
+- Gestion des employés d'Epic Events : création, mise à jour, suppression, rôle,
+- Gestion des clients : création, mise à jour, coordonnées, contrats et événements liés,
 - Gestion des contrats : création, mise à jour, clients et événements liés,
-- Gestion des événements : création, mise à jour,contrats liés,
+- Gestion des événements : création, mise à jour, contrats liés,
 
 ---
 ## technologies utilisées
@@ -64,7 +64,6 @@ venv\Scripts\activate         # sur Windows
 ```bash
 pip install -r requirements.txt
 ```
-## Configuration du fichier `.env`
 
 ### 4. Créer le fichier `.env`
 À la racine du projet, créer un fichier `.env` avec les variables d'environnement suivantes :
@@ -98,7 +97,7 @@ print(secrets.token_urlsafe(32))
 L'application utilise **MySQL**.  
 Vous devez créer la base de données et un utilisateur associé.
 
-### Étapes  MySQL Command Client (https://dev.mysql.com/downloads/installer/ ):
+###  MySQL Command Client (https://dev.mysql.com/downloads/installer/ ):
 ```sql
 CREATE DATABASE epicevents_db ;
 CREATE USER 'epic_user'@'localhost' IDENTIFIED BY 'epic_password';

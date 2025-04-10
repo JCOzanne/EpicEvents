@@ -1,5 +1,6 @@
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
+import re
 
 from controllers.client_controller import ClientController
 from controllers.contract_controller import ContractController
@@ -14,21 +15,16 @@ class ContractView:
         self.client_controller = ClientController()
 
     def check_authentication(self):
-        """Checks user authentication.
-
-        Verifies if a user is authenticated by checking for a valid token.
-        If a valid token is found, the current_user attribute is updated
-        and the function returns True. Otherwise, it returns False.
-
-        Returns:
-            bool: True if authenticated, False otherwise.
-        """
         from auth import verify_token
         payload = verify_token()
         if payload:
             self.current_user = self.controller.get_user_by_id(payload['user_id'])
             return True
         return False
+
+    def clean_amount_string(self, amount_str):
+        cleaned = re.sub(r"[^\d,.-]", "", amount_str).replace(",", ".")
+        return cleaned
 
     def display_contracts(self):
         contracts = self.controller.get_all_contracts()
@@ -45,8 +41,7 @@ class ContractView:
                   f"Reste à payer : {contract.sold} ,"
                   f"Status : {'signé' if contract.status else 'Non signé'},"
                   f"Contrat signé le : {contract.date_created}"
-                  f"Commercial associé : {commercial_name}, "
-                  )
+                  f"Commercial associé : {commercial_name}, ")
 
     def display_unsigned_contracts(self):
         contracts = self.controller.get_unsigned_contracts()
@@ -68,8 +63,7 @@ class ContractView:
             print(f"ID du contrat: {contract.id}, "
                   f"Client: {contract.client.name}, Montant: {contract.amount}, "
                   f"Solde: {contract.sold}"
-                  f"Date de création : {contract.date_created}"
-                  )
+                  f"Date de création : {contract.date_created}")
 
     def create_contract_prompt(self):
         if self.current_user.role.name != "gestion":
@@ -91,44 +85,38 @@ class ContractView:
         ).execute()
 
         def validate_amount(amount):
-
-            """
-            Validate the contract amount.
-
-            This method checks if the given amount is a positive number.
-            It returns True if the amount is valid (a number),
-            otherwise it returns the validation error message.
-            """
             try:
-                amount = float(amount.replace(',', '.'))
-                if amount <= 0:
+                cleaned = self.clean_amount_string(amount)
+                value = float(cleaned)
+                if value <= 0:
                     return "Le montant doit être supérieur à zéro."
                 return True
             except ValueError:
-                return "Veuillez entrer un montant valide (nombre uniquement)."
+                return "Veuillez entrer un montant valide (nombre uniquement, sans lettre ni symbole)."
 
-        amount = inquirer.text(
+        amount_input = inquirer.text(
             message="Montant total du contrat:",
             validate=validate_amount,
         ).execute()
-        amount = float(amount.replace(',', '.'))
+        amount = float(self.clean_amount_string(amount_input))
 
         def validate_sold(sold):
             try:
-                sold = float(sold.replace(',', '.'))
-                if sold < 0:
+                cleaned = self.clean_amount_string(sold)
+                value = float(cleaned)
+                if value < 0:
                     return "Le montant payé ne peut pas être négatif."
-                if sold > amount:
+                if value > amount:
                     return "Le montant payé ne peut pas dépasser le montant total du contrat."
                 return True
             except ValueError:
-                return "Veuillez entrer un montant valide (nombre uniquement)."
+                return "Veuillez entrer un montant valide (nombre uniquement, sans lettre ni symbole)."
 
-        sold = inquirer.text(
+        sold_input = inquirer.text(
             message="Montant déjà payé:",
             validate=validate_sold,
         ).execute()
-        sold = float(sold.replace(',', '.'))
+        sold = float(self.clean_amount_string(sold_input))
 
         status = inquirer.confirm(
             message="Le contrat est-il signé?",
@@ -178,41 +166,43 @@ class ContractView:
             if not amount:
                 return True
             try:
-                amount = float(amount.replace(',', '.'))
-                if amount <= 0:
+                cleaned = self.clean_amount_string(amount)
+                value = float(cleaned)
+                if value <= 0:
                     return "Le montant doit être supérieur à zéro."
                 return True
             except ValueError:
-                return "Veuillez entrer un montant valide (nombre uniquement)."
+                return "Veuillez entrer un montant valide (nombre uniquement, sans lettre ni symbole)."
 
         amount_input = inquirer.text(
             message="Nouveau montant total (laisser vide pour ne pas changer):",
             validate=validate_optional_amount,
         ).execute()
 
-        amount = float(amount_input.replace(',', '.')) if amount_input else None
+        amount = float(self.clean_amount_string(amount_input)) if amount_input else None
 
         def validate_optional_sold(sold):
             if not sold:
                 return True
             try:
-                sold = float(sold.replace(',', '.'))
-                if sold < 0:
+                cleaned = self.clean_amount_string(sold)
+                value = float(cleaned)
+                if value < 0:
                     return "Le montant payé ne peut pas être négatif."
-                if amount is not None and sold > amount:
+                if amount is not None and value > amount:
                     return "Le solde restant ne peut pas dépasser le montant total."
-                if amount is None and sold > contract.amount:
+                if amount is None and value > contract.amount:
                     return "Le solde restant ne peut pas dépasser le montant total actuel."
                 return True
             except ValueError:
-                return "Veuillez entrer un montant valide (nombre uniquement)."
+                return "Veuillez entrer un montant valide (nombre uniquement, sans lettre ni symbole)."
 
         sold_input = inquirer.text(
             message="Nouveau solde restant (laisser vide pour ne pas changer):",
             validate=validate_optional_sold,
         ).execute()
 
-        sold = float(sold_input.replace(',', '.')) if sold_input else None
+        sold = float(self.clean_amount_string(sold_input)) if sold_input else None
 
         status_choices = [
             Choice(value=None, name="Ne pas modifier"),

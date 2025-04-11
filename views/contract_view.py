@@ -37,11 +37,11 @@ class ContractView:
             print(f"ID : {contract.id}, "
                   f"Client : {client_name}, "
                   f"Téléphone du client : {client_phone}, Email du client : {client_email}, "
-                  f"Montant du contrat : {contract.amount},"
+                  f"Montant du contrat : {contract.amount}, "
                   f"Reste à payer : {contract.sold} ,"
-                  f"Status : {'signé' if contract.status else 'Non signé'},"
-                  f"Contrat signé le : {contract.date_created}"
-                  f"Commercial associé : {commercial_name}, ")
+                  f"Statut : {'signé' if contract.status else 'Non signé'}, "
+                  f"Contrat signé le : {contract.date_created} "
+                  f"Commercial associé : {commercial_name} ")
 
     def display_unsigned_contracts(self):
         contracts = self.controller.get_unsigned_contracts()
@@ -51,7 +51,7 @@ class ContractView:
             return
         for contract in contracts:
             print(f"ID du contrat: {contract.id}, Client: {contract.client.name}, Montant: {contract.amount}, "
-                  f"Solde: {contract.sold}, Date de création: {contract.date_created}")
+                  f"Solde: {contract.sold} , Date de création: {contract.date_created}")
 
     def display_unpaid_contracts(self):
         contracts = self.controller.get_unpaid_contracts()
@@ -105,15 +105,15 @@ class ContractView:
                 cleaned = self.clean_amount_string(sold)
                 value = float(cleaned)
                 if value < 0:
-                    return "Le montant payé ne peut pas être négatif."
+                    return "Le solde restant ne peut pas être négatif."
                 if value > amount:
-                    return "Le montant payé ne peut pas dépasser le montant total du contrat."
+                    return "Le solde restant ne peut pas dépasser le montant total du contrat."
                 return True
             except ValueError:
                 return "Veuillez entrer un montant valide (nombre uniquement, sans lettre ni symbole)."
 
         sold_input = inquirer.text(
-            message="Montant déjà payé:",
+            message="Solde restant:",
             validate=validate_sold,
         ).execute()
         sold = float(self.clean_amount_string(sold_input))
@@ -188,7 +188,7 @@ class ContractView:
                 cleaned = self.clean_amount_string(sold)
                 value = float(cleaned)
                 if value < 0:
-                    return "Le montant payé ne peut pas être négatif."
+                    return "Le solde restant ne peut pas être négatif."
                 if amount is not None and value > amount:
                     return "Le solde restant ne peut pas dépasser le montant total."
                 if amount is None and value > contract.amount:

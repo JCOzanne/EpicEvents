@@ -75,7 +75,7 @@ DB_PASSWORD=epic_password
 DB_NAME=epicevents_db
 DB_HOST=localhost
 
-# Clé secrète JWT (à générer, voir plus bas)
+# Clé secrète JWT
 SECRET_KEY=your_secret_key
 
 # DSN Sentry
@@ -102,12 +102,20 @@ FLUSH PRIVILEGES;
 
 Une fois les dépendances installées et la base configurée :
 
+Initialiser les rôles et créer un utilisateur admin :  
+
+```python
+from main import initialize_roles, create_admin_user
+initialize_roles()
+create_admin_user()
+```
+
+Lancer l'application :
+
 ```bash
 python main.py login
 ```
-Vous pouvez vous connecter en renseignant :  
-adresse mail : admin@epicevents.com  
-mot de passe : adminpassword  
+
 Vous accéderez alors au menu principal de l'application puis aux menus interactifs pour gérer les utilisateurs, clients, contrats, événements.
 
 ---

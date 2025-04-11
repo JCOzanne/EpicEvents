@@ -83,13 +83,6 @@ SENTRY_DSN=https://your_dsn@sentry.io/project-id
 (se créer un compte sur Sentry.io et obtenir sa clé dsn)
 ```
 
-### Générer une `SECRET_KEY`
-On pourra utiliser ce script pour générer la SECRET_KEY :
-```python
-import secrets
-print(secrets.token_urlsafe(32))
-```
-
 ---
 
 ## Création de la base de données MySQL
@@ -112,6 +105,9 @@ Une fois les dépendances installées et la base configurée :
 ```bash
 python main.py login
 ```
+Vous pouvez vous connecter en renseignant :  
+adresse mail : admin@epicevents.com  
+mot de passe : adminpassword  
 Vous accéderez alors au menu principal de l'application puis aux menus interactifs pour gérer les utilisateurs, clients, contrats, événements.
 
 ---

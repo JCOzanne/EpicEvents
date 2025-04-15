@@ -70,7 +70,7 @@ class UserView:
                               ).execute()
         password = inquirer.secret(
             message="Mot de passe: ",
-            validate=EmptyInputValidator(message="Le mail ne peut être vide"),
+            validate=EmptyInputValidator(message="Le mot de passe ne peut être vide"),
         ).execute()
         role_choice = inquirer.select(
             message="Rôle",

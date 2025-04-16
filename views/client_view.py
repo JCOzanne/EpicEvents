@@ -121,7 +121,13 @@ class ClientView:
         if client:
             print(f"Le client {client.name} a été mis à jour avec succès.")
         else:
-            print("Erreur lors de la mise à jour du client.")
+            client_data = self.controller.get_client_by_id(client_id)
+            if client_data and client_data.commercial_id != self.current_user.id:
+                print("Vous n'avez pas les droits pour modifier ce client ")
+            elif not client_data:
+                print("Erreur : ce client n'existe plus.")
+            else:
+                print("Erreur lors de la mise à jour du client.")
 
     def delete_client_prompt(self):
         clients = self.controller.get_all_clients()
